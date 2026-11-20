@@ -1,0 +1,42 @@
+{
+  "ctin": "29BTGPB9133V1ZT",
+  "trdnm": "Bharath Electricals",
+  "records": [
+    {
+      "ctin": "29BTGPB9133V1ZT",
+      "trdnm": "Bharath Electricals",
+      "doc_type": "INV",
+      "inum": "BE/6074",
+      "dt": "2026-10-12",
+      "txval": "24000",
+      "igst": "0",
+      "cgst": "2160.00",
+      "sgst": "2160.00",
+      "pos": "29",
+      "rev": "N",
+      "itcavl": "Y",
+      "rsn": "",
+      "supfildt": "2026-11-18",
+      "supprd": "102026",
+      "val": "28320.00"
+    },
+    {
+      "ctin": "29BTGPB9133V1ZT",
+      "trdnm": "Bharath Electricals",
+      "doc_type": "INV",
+      "inum": "BE/5633",
+      "dt": "2026-10-07",
+      "txval": "12000",
+      "igst": "0",
+      "cgst": "1080.00",
+      "sgst": "1080.00",
+      "pos": "29",
+      "rev": "N",
+      "itcavl": "Y",
+      "rsn": "",
+      "supfildt": "2026-11-18",
+      "supprd": "102026",
+      "val": "14160.00"
+    }
+  ]
+}

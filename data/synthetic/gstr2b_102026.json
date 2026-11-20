@@ -1,0 +1,667 @@
+{
+  "_simulated": "SIMULATED GSTR-2B for a fictional taxpayer. Not from the GST portal.",
+  "data": {
+    "gstin": "29KEMPR1791C1ZW",
+    "rtnprd": "102026",
+    "version": "1.0",
+    "gendt": "14-11-2026",
+    "docdata": {
+      "b2b": [
+        {
+          "ctin": "29RDLPS1950Q1Z5",
+          "trdnm": "Sri Ganesh Traders",
+          "supfildt": "11-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "SGT/5704",
+              "typ": "R",
+              "dt": "14-10-2026",
+              "val": "22243.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "18850",
+              "igst": "0",
+              "cgst": "1696.50",
+              "sgst": "1696.50",
+              "cess": "0"
+            },
+            {
+              "inum": "SGT/9243",
+              "typ": "R",
+              "dt": "22-10-2026",
+              "val": "11682.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "9900",
+              "igst": "0",
+              "cgst": "891.00",
+              "sgst": "891.00",
+              "cess": "0"
+            },
+            {
+              "inum": "SGT/5837",
+              "typ": "R",
+              "dt": "11-10-2026",
+              "val": "86317.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "73150",
+              "igst": "0",
+              "cgst": "6583.50",
+              "sgst": "6583.50",
+              "cess": "0"
+            },
+            {
+              "inum": "SGT-1023",
+              "typ": "R",
+              "dt": "26-10-2026",
+              "val": "29736.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "25200",
+              "igst": "0",
+              "cgst": "2268.00",
+              "sgst": "2268.00",
+              "cess": "0"
+            },
+            {
+              "inum": "SGT/1088",
+              "typ": "R",
+              "dt": "24-10-2026",
+              "val": "21535.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "18250",
+              "igst": "0",
+              "cgst": "1642.50",
+              "sgst": "1642.50",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29GBCFM8104N1ZQ",
+          "trdnm": "Mysore Agro Supplies",
+          "supfildt": "11-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "MAS/4522",
+              "typ": "R",
+              "dt": "27-10-2026",
+              "val": "12127.50",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "11550",
+              "igst": "0",
+              "cgst": "288.75",
+              "sgst": "288.75",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29CHCFC7955B1Z0",
+          "trdnm": "Chamundi Packaging",
+          "supfildt": "12-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "CP/9569",
+              "typ": "R",
+              "dt": "23-10-2026",
+              "val": "39766.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "33700",
+              "igst": "0",
+              "cgst": "3033.00",
+              "sgst": "3033.00",
+              "cess": "0"
+            },
+            {
+              "inum": "CP/5785",
+              "typ": "R",
+              "dt": "23-10-2026",
+              "val": "48970.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "41500",
+              "igst": "0",
+              "cgst": "3735.00",
+              "sgst": "3735.00",
+              "cess": "0"
+            },
+            {
+              "inum": "CP/8188",
+              "typ": "R",
+              "dt": "20-10-2026",
+              "val": "16461.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "13950",
+              "igst": "0",
+              "cgst": "1255.50",
+              "sgst": "1255.50",
+              "cess": "0"
+            },
+            {
+              "inum": "CP/7781",
+              "typ": "R",
+              "dt": "01-10-2026",
+              "val": "73160.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "62000",
+              "igst": "0",
+              "cgst": "5580.00",
+              "sgst": "5580.00",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29SDHCK2013S1ZF",
+          "trdnm": "Kaveri Plastics",
+          "supfildt": "11-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "KP/6505",
+              "typ": "R",
+              "dt": "08-10-2026",
+              "val": "50386.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "42700",
+              "igst": "0",
+              "cgst": "3843.00",
+              "sgst": "3843.00",
+              "cess": "0"
+            },
+            {
+              "inum": "KP/9102",
+              "typ": "R",
+              "dt": "15-10-2026",
+              "val": "50858.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "43100",
+              "igst": "0",
+              "cgst": "3879.00",
+              "sgst": "3879.00",
+              "cess": "0"
+            },
+            {
+              "inum": "KP/4661",
+              "typ": "R",
+              "dt": "28-10-2026",
+              "val": "68794.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "58300",
+              "igst": "0",
+              "cgst": "5247.00",
+              "sgst": "5247.00",
+              "cess": "0"
+            },
+            {
+              "inum": "KP/1045",
+              "typ": "R",
+              "dt": "23-10-2026",
+              "val": "75461.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "63950",
+              "igst": "0",
+              "cgst": "5755.50",
+              "sgst": "5755.50",
+              "cess": "0"
+            },
+            {
+              "inum": "KP/1102",
+              "typ": "R",
+              "dt": "05-10-2026",
+              "val": "72352.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "64600",
+              "igst": "0",
+              "cgst": "3876.00",
+              "sgst": "3876.00",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29SMBPN4622B1ZW",
+          "trdnm": "Nandi Hardware",
+          "supfildt": "11-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "NH/1459",
+              "typ": "R",
+              "dt": "08-10-2026",
+              "val": "20591.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "17450",
+              "igst": "0",
+              "cgst": "1570.50",
+              "sgst": "1570.50",
+              "cess": "0"
+            },
+            {
+              "inum": "NH/9752",
+              "typ": "R",
+              "dt": "01-10-2026",
+              "val": "60947.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "51650",
+              "igst": "0",
+              "cgst": "4648.50",
+              "sgst": "4648.50",
+              "cess": "0"
+            },
+            {
+              "inum": "NH/0457",
+              "typ": "R",
+              "dt": "12-08-2025",
+              "val": "40320.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "36000",
+              "igst": "0",
+              "cgst": "2160.00",
+              "sgst": "2160.00",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29REJFS7867E1ZV",
+          "trdnm": "Sahyadri Seeds",
+          "supfildt": "13-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "SS/9378",
+              "typ": "R",
+              "dt": "18-10-2026",
+              "val": "41790.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "39800",
+              "igst": "0",
+              "cgst": "995.00",
+              "sgst": "995.00",
+              "cess": "0"
+            },
+            {
+              "inum": "SS/984",
+              "typ": "R",
+              "dt": "20-10-2026",
+              "val": "72502.50",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "69050",
+              "igst": "0",
+              "cgst": "1726.25",
+              "sgst": "1726.25",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29RDSPM6054R1ZX",
+          "trdnm": "Malnad Spices",
+          "supfildt": "12-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "MS/6636",
+              "typ": "R",
+              "dt": "13-10-2026",
+              "val": "44887.50",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "42750",
+              "igst": "0",
+              "cgst": "1068.75",
+              "sgst": "1068.75",
+              "cess": "0"
+            },
+            {
+              "inum": "MS/1203",
+              "typ": "R",
+              "dt": "02-10-2026",
+              "val": "22575.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "21500",
+              "igst": "0",
+              "cgst": "537.50",
+              "sgst": "537.50",
+              "cess": "0"
+            },
+            {
+              "inum": "MS/961",
+              "typ": "R",
+              "dt": "11-10-2026",
+              "val": "66675.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "63500",
+              "igst": "0",
+              "cgst": "1587.50",
+              "sgst": "1587.50",
+              "cess": "0"
+            },
+            {
+              "inum": "MS/557",
+              "typ": "R",
+              "dt": "15-10-2026",
+              "val": "5197.50",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "4950",
+              "igst": "0",
+              "cgst": "123.75",
+              "sgst": "123.75",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29VFDCT4078L1ZW",
+          "trdnm": "Tumkur Steel Works",
+          "supfildt": "12-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "TSW/517",
+              "typ": "R",
+              "dt": "12-10-2026",
+              "val": "76464.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "64800",
+              "igst": "0",
+              "cgst": "5832.00",
+              "sgst": "5832.00",
+              "cess": "0"
+            },
+            {
+              "inum": "TSW/1489",
+              "typ": "R",
+              "dt": "26-10-2026",
+              "val": "53100.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "45000",
+              "igst": "0",
+              "cgst": "4050.00",
+              "sgst": "4050.00",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29DRWFH2028S1ZC",
+          "trdnm": "Hassan Fertilisers",
+          "supfildt": "11-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "HF/5791",
+              "typ": "R",
+              "dt": "21-10-2026",
+              "val": "29190.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "27800",
+              "igst": "0",
+              "cgst": "695.00",
+              "sgst": "695.00",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "33RNYCC6146O1ZN",
+          "trdnm": "Coimbatore Pumps",
+          "supfildt": "13-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "CP/8027",
+              "typ": "R",
+              "dt": "15-10-2026",
+              "val": "60357.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "51150",
+              "igst": "9207.00",
+              "cgst": "0",
+              "sgst": "0",
+              "cess": "0"
+            },
+            {
+              "inum": "CP/4437",
+              "typ": "R",
+              "dt": "11-10-2026",
+              "val": "91804.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "77800",
+              "igst": "14004.00",
+              "cgst": "0",
+              "sgst": "0",
+              "cess": "0"
+            },
+            {
+              "inum": "CP/3365",
+              "typ": "R",
+              "dt": "26-10-2026",
+              "val": "88323.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "74850",
+              "igst": "13473.00",
+              "cgst": "0",
+              "sgst": "0",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "32ZFWFK4999C1ZU",
+          "trdnm": "Kochi Coir Products",
+          "supfildt": "11-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "KCP/6026",
+              "typ": "R",
+              "dt": "07-10-2026",
+              "val": "58852.50",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "56050",
+              "igst": "2802.50",
+              "cgst": "0",
+              "sgst": "0",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "29SJQPM9111K1Z3",
+          "trdnm": "Mandya Jaggery Traders",
+          "supfildt": "12-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "MJT/1591",
+              "typ": "R",
+              "dt": "10-10-2026",
+              "val": "71190.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "67800",
+              "igst": "0",
+              "cgst": "1695.00",
+              "sgst": "1695.00",
+              "cess": "0"
+            },
+            {
+              "inum": "MJT/3750",
+              "typ": "R",
+              "dt": "06-10-2026",
+              "val": "40320.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "38400",
+              "igst": "0",
+              "cgst": "960.00",
+              "sgst": "960.00",
+              "cess": "0"
+            },
+            {
+              "inum": "MJT/3297",
+              "typ": "R",
+              "dt": "21-10-2026",
+              "val": "26040.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "24800",
+              "igst": "0",
+              "cgst": "620.00",
+              "sgst": "620.00",
+              "cess": "0"
+            }
+          ]
+        },
+        {
+          "ctin": "27SOLCP5911H1ZX",
+          "trdnm": "Pune Agro Chem",
+          "supfildt": "11-11-2026",
+          "supprd": "102026",
+          "inv": [
+            {
+              "inum": "PAC/6585",
+              "typ": "R",
+              "dt": "11-10-2026",
+              "val": "12803.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "10850",
+              "igst": "1953.00",
+              "cgst": "0",
+              "sgst": "0",
+              "cess": "0"
+            }
+          ]
+        }
+      ],
+      "cdnr": [
+        {
+          "ctin": "29DRWFH2028S1ZC",
+          "trdnm": "Hassan Fertilisers",
+          "supfildt": "11-11-2026",
+          "supprd": "102026",
+          "nt": [
+            {
+              "ntnum": "HF/CN/07",
+              "typ": "C",
+              "dt": "12-10-2026",
+              "val": "3150.00",
+              "pos": "29",
+              "rev": "N",
+              "itcavl": "Y",
+              "rsn": "",
+              "txval": "3000",
+              "igst": "0",
+              "cgst": "75.00",
+              "sgst": "75.00",
+              "cess": "0"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

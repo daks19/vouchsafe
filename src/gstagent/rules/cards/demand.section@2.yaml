@@ -1,0 +1,17 @@
+id: demand.section
+version: 2
+title: Which section governs a demand for a financial year (Sections 73/74 or 74A)
+effective_from: 2024-11-01
+selects_on: the date of the proceeding (notice or check date)
+params: {s74a_from_fy: 2024}   # FY 2024-25 onwards
+citations:
+  - "CGST Act s.74A (Finance (No. 2) Act 2024): demands for FY 2024-25 onwards, fraud and non-fraud alike"
+  - "CGST Act s.73 and s.74 continue to govern demands for FY 2017-18 to FY 2023-24"
+verify_before_finale: true
+notes: >-
+  The card names the section only. Time limits and penalties under 74A differ for fraud and non-fraud cases;
+  those stay with the CA.
+examples:
+  - {name: FY 2023-24 stays under 73/74, as_of: 2026-11-18, inputs: {fy_start_year: 2023}, expect: {section: "73/74"}}
+  - {name: FY 2024-25 falls under 74A, as_of: 2026-11-18, inputs: {fy_start_year: 2024}, expect: {section: "74A"}}
+  - {name: FY 2026-27 falls under 74A, as_of: 2026-11-18, inputs: {fy_start_year: 2026}, expect: {section: "74A"}}

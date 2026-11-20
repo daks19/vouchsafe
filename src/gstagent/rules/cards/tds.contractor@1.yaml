@@ -1,0 +1,29 @@
+id: tds.contractor
+version: 1
+title: TDS on payments to contractors
+effective_from: 2026-04-01
+selects_on: the earlier of credit or payment
+params:
+  single_bill_threshold: "30000"
+  aggregate_threshold: "100000"
+  rate_individual_huf: "1"
+  rate_others: "2"
+  rate_no_pan: "20"
+  payment_code_individual_huf: "1023"
+  payment_code_others: "1024"
+citations:
+  - "Income-tax Act 2025, s.393(1) table (payments to contractors); s.393(4) Sl. 8 (transporter with ten or fewer goods carriages, with PAN declaration)"
+  - "s.397(2): higher rate when the payee has no PAN"
+  - "CBDT Circular 23/2017 (TDS on amount excluding GST when shown separately), continued by s.536(2)"
+verify_before_finale: true
+notes: >
+  Purchase of goods is not contract work. Once the year's total crosses the aggregate threshold,
+  TDS is due on the whole total, not only the latest bill. Payment codes must be checked against TRACES.
+examples:
+  - {name: small bill, as_of: 2026-06-01, inputs: {payee_holder_type: individual, bill_base: "20000"}, expect: {tds: "0"}}
+  - {name: sixth monthly bill crosses aggregate, as_of: 2026-09-01,
+     inputs: {payee_holder_type: individual, bill_base: "20000", aggregate_before: "100000"},
+     expect: {tds: "1200", base: "120000", rate: "1", payment_code: "1023"}}
+  - {name: firm single bill, as_of: 2026-06-01, inputs: {payee_holder_type: firm, bill_base: "50000"}, expect: {tds: "1000", payment_code: "1024"}}
+  - {name: no PAN, as_of: 2026-06-01, inputs: {payee_holder_type: individual, payee_has_pan: false, bill_base: "50000"}, expect: {tds: "10000"}}
+  - {name: small transporter exempt, as_of: 2026-06-01, inputs: {payee_holder_type: individual, bill_base: "50000", transporter_exempt: true}, expect: {tds: "0"}}

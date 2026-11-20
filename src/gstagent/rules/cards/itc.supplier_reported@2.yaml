@@ -1,0 +1,17 @@
+id: itc.supplier_reported
+version: 2
+title: ITC only when the supplier has reported the invoice and it is not restricted (Section 16(2)(aa), (ba))
+effective_from: 2022-10-01
+selects_on: the first day of the tax period
+params: {check_s38_restriction: true}
+citations:
+  - "CGST Act s.16(2)(aa) (w.e.f. 01-01-2022): ITC only if the invoice is furnished by the supplier and communicated in GSTR-2B"
+  - "CGST Act s.16(2)(ba) (Finance Act 2022, w.e.f. 01-10-2022): ITC only if the details communicated under s.38 have not been restricted"
+notes: >-
+  Reporting is not payment. Whether the supplier actually paid the tax (s.16(2)(c)) is never inferred from this card;
+  a filed GSTR-3B is filing status, not proof that tax on a particular invoice reached the government.
+examples:
+  - {name: missing in 2B, as_of: 2026-10-01, inputs: {in_2b: false, tax: "4320"}, expect: {itc_claimable_now: false, itc_at_risk: "4320"}}
+  - {name: present in 2B, as_of: 2026-10-01, inputs: {in_2b: true, itcavl: "Y", tax: "4320"}, expect: {itc_claimable_now: true, itc_at_risk: "0"}}
+  - {name: restricted under section 38, as_of: 2026-10-01, inputs: {in_2b: true, itcavl: "Y", restricted_s38: true, tax: "4320"},
+     expect: {itc_claimable_now: false, itc_at_risk: "4320"}}

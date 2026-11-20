@@ -1,0 +1,15 @@
+id: ims.treatment
+version: 1
+title: What an IMS action (or no action) does to a record
+effective_from: 2024-10-14
+effective_to: 2025-09-30
+selects_on: the first day of the tax period
+params: {credit_note_pending_allowed: false, credit_note_reduction_choice: false, boe_in_ims: false}
+citations:
+  - "GSTN advisories on the Invoice Management System (IMS live from 14-10-2024)"
+notes: IMS action is optional. A record with no action is deemed accepted when GSTR-2B is generated.
+examples:
+  - {name: credit note cannot be pending, as_of: 2025-06-01, inputs: {doc_type: CRN, action: PENDING}, expect: {allowed: false}}
+  - {name: no action is deemed accepted, as_of: 2025-06-01, inputs: {doc_type: INV, action: NO_ACTION}, expect: {allowed: true, flows_to_2b: true}}
+  - {name: reverse charge is outside IMS, as_of: 2025-06-01, inputs: {doc_type: INV, action: ACCEPTED, reverse_charge: true},
+     expect: {allowed: false, in_ims: false, flows_to_2b: true}}

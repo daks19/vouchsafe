@@ -1,0 +1,202 @@
+{
+  "books": {
+    "B001": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B002": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B003": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B004": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B005": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B006": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B007": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B008": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B009": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B010": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B011": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B012": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B013": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B014": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B015": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B016": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B017": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B018": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B019": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B020": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B021": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B022": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B023": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B024": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B025": {
+      "scenario": "clean",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B026": {
+      "scenario": "inv_no_format",
+      "status": "matched",
+      "tier": "normalised"
+    },
+    "B027": {
+      "scenario": "date_shift",
+      "status": "matched",
+      "tier": "normalised"
+    },
+    "B028": {
+      "scenario": "inv_no_ocr",
+      "status": "matched",
+      "tier": "fuzzy"
+    },
+    "B029": {
+      "scenario": "supplier_not_filed_will_file",
+      "status": "missing_in_2b",
+      "tier": null
+    },
+    "B030": {
+      "scenario": "supplier_not_filed_will_file",
+      "status": "missing_in_2b",
+      "tier": null
+    },
+    "B031": {
+      "scenario": "supplier_not_filed_silent",
+      "status": "missing_in_2b",
+      "tier": null
+    },
+    "B032": {
+      "scenario": "amount_mismatch",
+      "status": "amount_mismatch",
+      "tier": null
+    },
+    "B033": {
+      "scenario": "gstin_ocr_z_repairable",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B034": {
+      "scenario": "gstin_unreadable_anchored",
+      "status": "matched",
+      "tier": "anchored"
+    },
+    "B035": {
+      "scenario": "duplicate_original",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B036": {
+      "scenario": "duplicate_photo",
+      "status": "duplicate_in_books",
+      "tier": null
+    },
+    "B037": {
+      "scenario": "old_rate_late_filed",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B038": {
+      "scenario": "post_reform_12pct",
+      "status": "matched",
+      "tier": "exact"
+    },
+    "B039": {
+      "scenario": "credit_note",
+      "status": "matched",
+      "tier": "exact"
+    }
+  },
+  "portal_only": [
+    "29CHCFC7955B1Z0|CP/7781"
+  ]
+}

@@ -1,0 +1,25 @@
+id: itc.gstr1a_flow
+version: 1
+title: When a supplier's GSTR-1A correction reaches the buyer (IMS now, GSTR-2B next)
+effective_from: 2024-07-10
+selects_on: the date the supplier files GSTR-1A
+params: {gstr2b_generation_day: 14}
+citations:
+  - "CGST Rule 60(7)(iia), inserted by Notification 12/2024-CT (10-07-2024): supplies declared or amended in GSTR-1A are made available in the next open GSTR-2B"
+  - "CGST Rule 60(7): GSTR-2B for a month is generated on the 14th of the following month"
+  - "GSTN IMS FAQ: supplier records saved in GSTR-1/IFF/1A appear in IMS once saved"
+verify_before_finale: true
+notes: >-
+  Workflow 2 closes the matching case when the GSTR-1A record shows in IMS, but the credit does not
+  move back into the original period: it lands in the next GSTR-2B generated after the GSTR-1A is
+  filed, which is usually the following period's. Verify the 14th cut-off against the rule text.
+examples:
+  - {name: correction filed after the 14th lands in the next period, as_of: 2026-11-18,
+     inputs: {original_period: "102026", gstr1a_filed_on: 2026-11-18},
+     expect: {in_ims_now: true, itc_2b_period: "112026", itc_2b_available_on: 2026-12-14, later_than_original_period: true}}
+  - {name: correction filed before the 14th still makes the original period, as_of: 2026-11-12,
+     inputs: {original_period: "102026", gstr1a_filed_on: 2026-11-12},
+     expect: {itc_2b_period: "102026", itc_2b_available_on: 2026-11-14, later_than_original_period: false}}
+  - {name: filed on the 14th itself misses that day's GSTR-2B, as_of: 2026-11-14,
+     inputs: {original_period: "102026", gstr1a_filed_on: 2026-11-14},
+     expect: {itc_2b_period: "112026", later_than_original_period: true}}

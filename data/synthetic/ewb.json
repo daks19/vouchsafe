@@ -1,0 +1,37 @@
+[
+  {
+    "ewb_no": "291014526377",
+    "doc_no": "SLAT/0912",
+    "doc_date": "2026-11-14",
+    "generated_at": "2026-11-14T10:00:00",
+    "from": "Mysuru",
+    "to": "Bengaluru",
+    "distance_km": 145,
+    "vehicle_no": "KA09AB1234",
+    "scenario": "normal"
+  },
+  {
+    "ewb_no": "291014526401",
+    "doc_no": "SLAT/0910",
+    "doc_date": "2026-11-13",
+    "generated_at": "2026-11-13T18:30:00",
+    "from": "Mysuru",
+    "to": "Shivamogga",
+    "distance_km": 160,
+    "vehicle_no": "KA09C7731",
+    "scenario": "delayed_needs_extension"
+  },
+  {
+    "ewb_no": "291014526455",
+    "doc_no": "SLAT/0915",
+    "doc_date": "2026-11-14",
+    "generated_at": "2026-11-14T07:15:00",
+    "from": "Mysuru",
+    "to": "Mandya",
+    "distance_km": 48,
+    "vehicle_no": "KA09M4589",
+    "vehicle_no_actual": "KA09M4588",
+    "invoice_present": true,
+    "scenario": "detained_vehicle_typo"
+  }
+]

@@ -1,0 +1,13 @@
+id: itc.supplier_reported
+version: 1
+title: ITC only when the supplier has reported the invoice (Section 16(2)(aa))
+effective_from: 2022-01-01
+effective_to: 2022-09-30
+selects_on: the first day of the tax period
+params: {check_s38_restriction: false}
+citations:
+  - "CGST Act s.16(2)(aa) (w.e.f. 01-01-2022): ITC only if the invoice is furnished by the supplier and communicated in GSTR-2B"
+notes: Reporting is not payment. Whether the supplier actually paid the tax (s.16(2)(c)) is never inferred from this card.
+examples:
+  - {name: missing in 2B, as_of: 2022-06-01, inputs: {in_2b: false, tax: "4320"}, expect: {itc_claimable_now: false, itc_at_risk: "4320"}}
+  - {name: present in 2B, as_of: 2022-06-01, inputs: {in_2b: true, itcavl: "Y", tax: "4320"}, expect: {itc_claimable_now: true, itc_at_risk: "0"}}

@@ -1,0 +1,12 @@
+id: demand.section
+version: 1
+title: Which section governs a demand for a financial year (Sections 73/74)
+effective_from: 2017-07-01
+effective_to: 2024-10-31
+selects_on: the date of the proceeding (notice or check date)
+params: {s74a_from_fy: null}
+citations:
+  - "CGST Act s.73 (non-fraud) and s.74 (fraud, wilful misstatement or suppression)"
+notes: Before Section 74A came into force every demand ran under Section 73 or 74.
+examples:
+  - {name: any year before 74A, as_of: 2024-06-01, inputs: {fy_start_year: 2023}, expect: {section: "73/74"}}

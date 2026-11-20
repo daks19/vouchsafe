@@ -1,0 +1,32 @@
+id: gst.filing_calendar
+version: 1
+title: Return due dates by scheme (monthly, QRMP, composition)
+effective_from: 2021-01-01
+selects_on: the first day of the tax period
+params:
+  monthly: {gstr1_day: 11, gstr3b_day: 20}
+  qrmp:
+    iff_or_gstr1_day: 13
+    pmt06_day: 25
+    gstr3b_day_group_a: 22
+    gstr3b_day_group_b: 24
+    group_a_states: ["22", "23", "24", "25", "26", "27", "29", "30", "31", "32", "33", "34", "35", "36", "37"]
+  composition: {cmp08_day: 18}
+citations:
+  - "CGST Act s.37, s.39; CGST Rules 59, 61, 62"
+  - "QRMP scheme: Notification 84/2020-CT and related due-date notifications"
+verify_before_finale: true
+notes: >
+  Due dates are routinely extended by notification; check the portal for the period.
+  Group A (22nd) state list must be checked against the current notification.
+examples:
+  - {name: monthly filer, as_of: 2026-10-01, inputs: {scheme: regular_monthly, state_code: "29", period: "102026"},
+     expect: {gstr1_or_iff: 2026-11-11, gstr3b: 2026-11-20}}
+  - {name: QRMP first month, as_of: 2026-10-01, inputs: {scheme: regular_qrmp, state_code: "29", period: "102026"},
+     expect: {gstr1_or_iff: 2026-11-13, gstr1_optional: true, pmt06: 2026-11-25, gstr3b: null}}
+  - {name: QRMP quarter end Karnataka, as_of: 2026-12-01, inputs: {scheme: regular_qrmp, state_code: "29", period: "122026"},
+     expect: {gstr1_or_iff: 2027-01-13, gstr3b: 2027-01-22}}
+  - {name: QRMP quarter end Uttar Pradesh, as_of: 2026-12-01, inputs: {scheme: regular_qrmp, state_code: "09", period: "122026"},
+     expect: {gstr3b: 2027-01-24}}
+  - {name: composition quarter end, as_of: 2026-12-01, inputs: {scheme: composition, state_code: "29", period: "122026"},
+     expect: {cmp08: 2027-01-18, gstr3b: null}}

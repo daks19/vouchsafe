@@ -1,0 +1,12 @@
+id: gst.rate_check
+version: 1
+title: Is the GST rate on an invoice a recognised rate for its time of supply
+effective_from: 2017-07-01
+effective_to: 2025-09-21
+selects_on: the invoice's time of supply (use invoice date as a proxy)
+params: {standard: ["0", "5", "12", "18", "28"], special: ["0.1", "0.25", "1.5", "3"]}
+citations:
+  - "CGST rate notifications (Notification 1/2017-CT(Rate) and amendments)"
+notes: Never auto-reject on rate. A non-standard rate is a review flag.
+examples:
+  - {name: 12 percent valid before reform, as_of: 2025-08-10, inputs: {rate: "12"}, expect: {category: standard}}

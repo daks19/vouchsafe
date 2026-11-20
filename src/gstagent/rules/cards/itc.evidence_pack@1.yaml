@@ -1,0 +1,32 @@
+id: itc.evidence_pack
+version: 1
+title: Evidence pack for a purchase from a supplier whose registration was cancelled with backdated effect
+effective_from: 2026-10-01
+selects_on: the date the pack is built
+params:
+  documents:
+    invoice: "tax invoices"
+    eway_bill: "e-way bills"
+    transport_receipt: "transport receipts (lorry receipt / bilty)"
+    weighbridge_slip: "weighbridge slips"
+    toll_receipt: "toll receipts"
+    stock_record: "stock and consumption records"
+    bank_payment: "bank payment proof"
+  binding_state_codes: ["03", "04", "06"]   # Punjab, Chandigarh, Haryana
+citations:
+  - "Shaurya Alloys Pvt. Ltd. v. State of Punjab, CWP-34296-2024 (P&H HC, Oct 2026), Guideline 6: documents a purchasing dealer may produce to show a genuine purchase"
+  - "Binding within the Punjab and Haryana High Court's jurisdiction (Punjab, Haryana, Chandigarh); persuasive elsewhere"
+verify_before_finale: true
+notes: >-
+  The document list comes from secondary reports of the judgment (LiveLaw, KNN); check it against the
+  judgment text. The pack shows what is present and what is missing. It never says the credit is safe.
+examples:
+  - {name: complete pack in Karnataka is persuasive only, as_of: 2026-11-18,
+     inputs: {state_code: "29", present: [invoice, eway_bill, transport_receipt, weighbridge_slip, toll_receipt, stock_record, bank_payment]},
+     expect: {present_count: 7, total: 7, missing: [], complete: true, binding: false, guarantees_outcome: false}}
+  - {name: typical small trader has three of seven, as_of: 2026-11-18,
+     inputs: {state_code: "29", present: [invoice, eway_bill, bank_payment]},
+     expect: {present_count: 3, missing: [transport_receipt, weighbridge_slip, toll_receipt, stock_record], complete: false}}
+  - {name: binding in Haryana, as_of: 2026-11-18,
+     inputs: {state_code: "6", present: [invoice]},
+     expect: {binding: true, guarantees_outcome: false}}

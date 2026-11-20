@@ -1,0 +1,13 @@
+id: gst.drc01c_trigger
+version: 1
+title: Would ITC claimed in GSTR-3B trigger a DRC-01C intimation
+effective_from: 2023-08-04
+selects_on: the first day of the tax period
+params: {amount_threshold: "2500000", percent_threshold: "20"}
+citations:
+  - "CGST Rule 88D (Notification 38/2023-CT)"
+  - "Thresholds (more than Rs 25 lakh AND more than 20%) per minutes of the 50th GST Council meeting; not written in the rule"
+notes: Micro enterprises in the Rs 40 lakh - 3 crore band will rarely reach this. Show as a one-line pre-3B check.
+examples:
+  - {name: large excess triggers, as_of: 2026-10-01, inputs: {itc_3b: "3000000", itc_2b: "100000"}, expect: {would_trigger: true, excess: "2900000"}}
+  - {name: micro firm stays below, as_of: 2026-10-01, inputs: {itc_3b: "150000", itc_2b: "100000"}, expect: {would_trigger: false, excess: "50000", excess_pct: "50.00"}}

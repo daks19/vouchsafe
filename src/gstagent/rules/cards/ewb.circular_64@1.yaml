@@ -1,0 +1,26 @@
+id: ewb.circular_64
+version: 1
+title: Minor e-way bill errors that should not lead to Section 129 detention
+effective_from: 2018-09-14
+selects_on: the date of interception
+params:
+  max_char_errors: 2
+  penalty_s125: {cgst: "500", sgst: "500", igst: "1000"}
+citations:
+  - "CBIC Circular No. 64/38/2018-GST dated 14-09-2018, para 5 (a)-(f)"
+  - "CGST Act s.125 (general penalty), s.129 (detention)"
+verify_before_finale: true
+notes: >
+  Administrative guidance: proceedings 'may not be initiated'. Applies only when the goods carry
+  both an invoice and an e-way bill. State squads may cite the state's corresponding circular.
+  Output is always a draft for a professional to review.
+examples:
+  - {name: one character vehicle typo, as_of: 2026-11-14,
+     inputs: {invoice_present: true, ewb_present: true, vehicle_no_ewb: "KA04M4589", vehicle_no_actual: "KA04M4588"},
+     expect: {covered: true, paras: ["5(f)"]}}
+  - {name: three characters off, as_of: 2026-11-14,
+     inputs: {invoice_present: true, ewb_present: true, vehicle_no_ewb: "KA04M4589", vehicle_no_actual: "KA05N4581"},
+     expect: {covered: false}}
+  - {name: no e-way bill at all, as_of: 2026-11-14, inputs: {invoice_present: true, ewb_present: false}, expect: {covered: false}}
+  - {name: name spelling with correct GSTIN, as_of: 2026-11-14,
+     inputs: {invoice_present: true, ewb_present: true, name_spelling_error_gstin_correct: true}, expect: {covered: true, paras: ["5(a)"]}}

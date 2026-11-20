@@ -1,0 +1,43 @@
+id: itc.time_limit_16_4
+version: 1
+title: Last date to claim ITC on an invoice (Section 16(4)), and the last return that can carry it
+effective_from: 2022-10-01
+selects_on: the check date
+params: {deadline: {month: 11, day: 30}}
+citations:
+  - "CGST Act s.16(4) as amended by Finance Act 2022 (w.e.f. 01-10-2022): 30 November after the end of the financial year, or the annual return date if earlier"
+  - "CGST Act s.39 and CGST Rule 61: ITC is availed in GSTR-3B, which is filed after the end of its tax period (quarterly under QRMP)"
+  - "Due date of that GSTR-3B: read from the gst.filing_calendar card for the period"
+notes: >-
+  The legal deadline is the same for everyone, but a GSTR-3B for a period can only be filed after the
+  period ends. A monthly filer's last chance is the October GSTR-3B (due 20 November). A QRMP filer's
+  last chance is the July-September quarter's GSTR-3B (due 22 or 24 October): the October-December
+  return is due in January, after 30 November. Pass `filing_scheme` (and `state_code` for QRMP) to get
+  `last_return_period` and `claim_by`.
+examples:
+  - {name: FY 2025-26 invoice checked in Nov 2026, as_of: 2026-11-14, inputs: {invoice_date: 2025-08-12, check_date: 2026-11-14},
+     expect: {deadline: 2026-11-30, days_left: 16, expired: false}}
+  - {name: FY 2024-25 invoice is time-barred, as_of: 2026-11-14, inputs: {invoice_date: 2025-02-10, check_date: 2026-11-14},
+     expect: {deadline: 2025-11-30, days_left: -349, expired: true}}
+  - {name: annual return filed early brings the deadline forward, as_of: 2026-11-14,
+     inputs: {invoice_date: 2025-08-12, check_date: 2026-11-14, annual_return_filed_on: 2026-10-20},
+     expect: {deadline: 2026-10-20, expired: true, cut_by_annual_return: true}}
+  - {name: annual return filed after 30 November changes nothing, as_of: 2026-11-14,
+     inputs: {invoice_date: 2025-08-12, check_date: 2026-11-14, annual_return_filed_on: 2026-12-15},
+     expect: {deadline: 2026-11-30, cut_by_annual_return: false}}
+  - {name: QRMP filer in Karnataka must claim in the Jul-Sep GSTR-3B, as_of: 2026-10-05,
+     inputs: {invoice_date: 2025-08-12, check_date: 2026-10-05, filing_scheme: regular_qrmp, state_code: "29"},
+     expect: {deadline: 2026-11-30, last_return_period: "092026", claim_by: 2026-10-22, claim_by_passed: false}}
+  - {name: QRMP filer in Uttar Pradesh gets the 24th, as_of: 2026-10-05,
+     inputs: {invoice_date: 2025-08-12, check_date: 2026-10-05, filing_scheme: regular_qrmp, state_code: "09"},
+     expect: {last_return_period: "092026", claim_by: 2026-10-24}}
+  - {name: QRMP filer after 22 October has missed the planned return but not the legal deadline, as_of: 2026-11-14,
+     inputs: {invoice_date: 2025-08-12, check_date: 2026-11-14, filing_scheme: regular_qrmp, state_code: "29"},
+     expect: {expired: false, claim_by: 2026-10-22, claim_by_passed: true}}
+  - {name: monthly filer can still use the October GSTR-3B, as_of: 2026-11-14,
+     inputs: {invoice_date: 2025-08-12, check_date: 2026-11-14, filing_scheme: regular_monthly, state_code: "29"},
+     expect: {last_return_period: "102026", claim_by: 2026-11-20, claim_by_passed: false}}
+  - {name: an early annual return cuts the QRMP claim date too, as_of: 2026-10-05,
+     inputs: {invoice_date: 2025-08-12, check_date: 2026-10-05, annual_return_filed_on: 2026-10-20,
+              filing_scheme: regular_qrmp, state_code: "29"},
+     expect: {deadline: 2026-10-20, last_return_period: "092026", claim_by: 2026-10-20}}

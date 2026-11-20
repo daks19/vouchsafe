@@ -1,0 +1,14 @@
+id: ewb.number_format
+version: 2
+title: E-way bill number format
+status: announced
+effective_from: 2027-01-01
+selects_on: the date the e-way bill was generated
+params: {digits: 14}
+citations:
+  - "GSTN advisory dated 04-11-2026: e-way bill numbers move from 12 to 14 digits from 01-01-2027 (consolidated EWB 10 to 11 digits)"
+verify_before_finale: true
+notes: Announced, not yet in force. E-way bills generated before 01-01-2027 keep their 12-digit numbers (version 1 applies to them).
+examples:
+  - {name: old length rejected for new bills, as_of: 2027-01-02, inputs: {ewb_no: "331012345678"}, expect: {valid_format: false, expected_digits: 14}}
+  - {name: 14 digits ok, as_of: 2027-01-02, inputs: {ewb_no: "33101234567890"}, expect: {valid_format: true}}

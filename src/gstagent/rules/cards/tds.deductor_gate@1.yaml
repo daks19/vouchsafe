@@ -1,0 +1,17 @@
+id: tds.deductor_gate
+version: 1
+title: Does this business have to deduct contractor/professional TDS at all
+effective_from: 2026-04-01
+selects_on: the first day of the tax year
+params: {turnover_limit_business: "10000000", receipts_limit_profession: "5000000", cliff_warning_fraction: "0.85"}
+citations:
+  - "Income-tax Act 2025, s.393 read with s.402(37): an individual/HUF deducts only if the previous year's business turnover exceeded Rs 1 crore (Rs 50 lakh for a profession)"
+verify_before_finale: true
+notes: >
+  Firms, LLPs and companies always deduct. Separate rent provision: an individual/HUF who is not otherwise
+  a deductor still deducts on rent above Rs 50,000 a month (not modelled here).
+examples:
+  - {name: proprietor below 1 crore, as_of: 2026-04-01, inputs: {holder_type: individual, prior_year_turnover: "8000000"}, expect: {must_deduct: false, cliff_warning: false}}
+  - {name: proprietor nearing the cliff, as_of: 2026-04-01, inputs: {holder_type: individual, prior_year_turnover: "8000000", current_year_projection: "9000000"}, expect: {must_deduct: false, cliff_warning: true}}
+  - {name: proprietor above 1 crore, as_of: 2026-04-01, inputs: {holder_type: individual, prior_year_turnover: "12000000"}, expect: {must_deduct: true}}
+  - {name: firm always deducts, as_of: 2026-04-01, inputs: {holder_type: firm, prior_year_turnover: "3000000"}, expect: {must_deduct: true}}

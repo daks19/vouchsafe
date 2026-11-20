@@ -1,0 +1,17 @@
+id: ewb.extension
+version: 2
+title: When an e-way bill can be extended
+effective_from: 2025-01-01
+selects_on: the current date
+params: {hours_before_expiry: 8, hours_after_expiry: 8, max_total_days: 360}
+citations:
+  - "CGST Rule 138(10) proviso: extension within eight hours from the time of expiry"
+  - "Portal behaviour: extension also allowed from eight hours before expiry"
+  - "GSTN e-way bill advisory: total validity including extensions capped at 360 days from original generation, from 01-01-2025"
+verify_before_finale: true
+examples:
+  - {name: evening before midnight expiry, as_of: 2026-11-15, inputs: {expires_at: "2026-11-16T00:00:00", now: "2026-11-15T18:00:00"},
+     expect: {can_extend: true, window_opens: "2026-11-15T16:00:00", window_closes: "2026-11-16T08:00:00"}}
+  - {name: grace window closed, as_of: 2026-11-16, inputs: {expires_at: "2026-11-16T00:00:00", now: "2026-11-16T09:00:00"}, expect: {can_extend: false}}
+  - {name: 360 day cap, as_of: 2026-11-15, inputs: {expires_at: "2026-11-16T00:00:00", now: "2026-11-15T18:00:00", original_generated_at: "2025-11-01T10:00:00"},
+     expect: {can_extend: false}}

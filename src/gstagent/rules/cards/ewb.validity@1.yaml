@@ -1,0 +1,12 @@
+id: ewb.validity
+version: 1
+title: E-way bill validity period
+status: superseded
+effective_from: 2018-04-01
+effective_to: 2020-12-31
+selects_on: the validity start date
+params: {km_per_day: 100, odc_km_per_day: 20}
+citations:
+  - "CGST Rule 138(10) (original: 1 day per 100 km)"
+examples:
+  - {name: 150 km in 2020, as_of: 2020-06-01, inputs: {validity_start_at: "2020-06-01T10:00:00", distance_km: 150}, expect: {days: 2, valid_through_date: 2020-06-03}}

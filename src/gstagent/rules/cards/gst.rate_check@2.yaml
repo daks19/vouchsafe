@@ -1,0 +1,17 @@
+id: gst.rate_check
+version: 2
+title: Is the GST rate on an invoice a recognised rate for its time of supply
+effective_from: 2025-09-22
+selects_on: the invoice's time of supply (use invoice date as a proxy)
+params: {standard: ["0", "5", "18", "40"], special: ["0.1", "0.25", "1.5", "3", "28"]}
+citations:
+  - "GST rate rationalisation recommended by the 56th GST Council, effective 22-09-2025"
+verify_before_finale: true
+notes: >
+  12% and most 28% entries were removed from 22-09-2025. 28% is kept here as a special
+  rate to review (specified goods during transition); confirm the current schedule.
+  An invoice dated before 22-09-2025 at 12% is still valid: version 1 applies to it.
+examples:
+  - {name: 12 percent after reform needs review, as_of: 2026-10-05, inputs: {rate: "12"}, expect: {category: non_standard_review}}
+  - {name: 18 percent standard, as_of: 2026-10-05, inputs: {rate: "18"}, expect: {category: standard}}
+  - {name: 28 percent special review, as_of: 2026-10-05, inputs: {rate: "28"}, expect: {category: special_review}}

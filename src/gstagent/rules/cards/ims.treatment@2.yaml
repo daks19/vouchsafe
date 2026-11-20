@@ -1,0 +1,22 @@
+id: ims.treatment
+version: 2
+title: What an IMS action (or no action) does to a record
+effective_from: 2025-10-01
+selects_on: the first day of the tax period
+params: {credit_note_pending_allowed: true, credit_note_reduction_choice: true, boe_in_ims: true}
+citations:
+  - "CGST Act s.38 as amended w.e.f. 01-10-2025 (Notification 16/2025-CT)"
+  - "GSTN advisory 17-10-2025: credit notes may be kept Pending for one tax period; 'Whether ITC needs to be reduced' declaration"
+  - "GSTN advisory 30-10-2025: Bills of Entry in IMS (Accept or Pending only)"
+  - "GSTN IMS FAQ: reverse-charge records are not part of IMS and continue to flow into GSTR-2B; supplier records saved in GSTR-1/IFF/1A appear in IMS once saved"
+notes: >-
+  IMS action is optional. A record with no action is deemed accepted when GSTR-2B is generated.
+  A Pending record is not deemed accepted later: it stays until acted on or the Section 16(4) time limit.
+examples:
+  - {name: credit note can be pending, as_of: 2026-10-01, inputs: {doc_type: CRN, action: PENDING}, expect: {allowed: true, flows_to_2b: false}}
+  - {name: no action is deemed accepted, as_of: 2026-10-01, inputs: {doc_type: INV, action: NO_ACTION}, expect: {allowed: true, flows_to_2b: true}}
+  - {name: bill of entry cannot be rejected, as_of: 2026-10-01, inputs: {doc_type: INV, action: REJECTED, is_bill_of_entry: true}, expect: {allowed: false}}
+  - {name: reject keeps ITC out, as_of: 2026-10-01, inputs: {doc_type: INV, action: REJECTED}, expect: {allowed: true, flows_to_2b: false}}
+  - {name: pending is never deemed accepted later, as_of: 2026-10-01, inputs: {doc_type: INV, action: PENDING}, expect: {allowed: true, flows_to_2b: false}}
+  - {name: reverse charge is outside IMS, as_of: 2026-10-01, inputs: {doc_type: INV, action: PENDING, reverse_charge: true},
+     expect: {allowed: false, in_ims: false, flows_to_2b: true}}

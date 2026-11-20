@@ -1,0 +1,11 @@
+id: ewb.doc_age
+version: 1
+title: E-way bill cannot be generated for old documents
+effective_from: 2025-01-01
+selects_on: the generation date
+params: {max_doc_age_days: 180}
+citations:
+  - "GSTN e-way bill advisory: no e-way bill for documents older than 180 days, from 01-01-2025"
+examples:
+  - {name: recent invoice, as_of: 2026-11-14, inputs: {doc_date: 2026-10-01, generate_on: 2026-11-14}, expect: {allowed: true, age_days: 44}}
+  - {name: stale invoice, as_of: 2026-11-14, inputs: {doc_date: 2026-05-01, generate_on: 2026-11-14}, expect: {allowed: false, age_days: 197}}

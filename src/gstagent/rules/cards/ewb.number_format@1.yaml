@@ -1,0 +1,11 @@
+id: ewb.number_format
+version: 1
+title: E-way bill number format
+effective_from: 2018-04-01
+effective_to: 2026-12-31
+selects_on: the date the e-way bill was generated
+params: {digits: 12}
+citations:
+  - "CGST Rule 138; NIC e-way bill system (12-digit EWB number)"
+examples:
+  - {name: 12 digits ok, as_of: 2026-11-14, inputs: {ewb_no: "331012345678"}, expect: {valid_format: true, expected_digits: 12}}

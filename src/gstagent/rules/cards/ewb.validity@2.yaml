@@ -1,0 +1,18 @@
+id: ewb.validity
+version: 2
+title: E-way bill validity period
+effective_from: 2021-01-01
+selects_on: the validity start date
+params: {km_per_day: 200, odc_km_per_day: 20}
+citations:
+  - "CGST Rule 138(10) and Explanation: each day expires at midnight of the day following the start date"
+  - "Notification 94/2020-CT: 1 day per 200 km w.e.f. 01-01-2021 (over-dimensional cargo 1 day per 20 km)"
+verify_before_finale: true
+notes: Validity starts at generation, or at the first Part-B entry when Part A was generated alone (portal behaviour); confirm.
+examples:
+  - {name: 150 km, as_of: 2026-11-14, inputs: {validity_start_at: "2026-11-14T10:00:00", distance_km: 150},
+     expect: {days: 1, valid_through_date: 2026-11-15, expires_at: "2026-11-16T00:00:00"}}
+  - {name: 450 km, as_of: 2026-11-14, inputs: {validity_start_at: "2026-11-14T10:00:00", distance_km: 450},
+     expect: {days: 3, valid_through_date: 2026-11-17}}
+  - {name: over-dimensional cargo 30 km, as_of: 2026-11-14, inputs: {validity_start_at: "2026-11-14T10:00:00", distance_km: 30, odc: true},
+     expect: {days: 2}}

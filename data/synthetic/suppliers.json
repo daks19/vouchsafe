@@ -1,0 +1,122 @@
+[
+  {
+    "gstin": "29RDLPS1950Q1Z5",
+    "name": "Sri Ganesh Traders",
+    "state_code": "29",
+    "default_rate": 18,
+    "phone": "+91 90000 00001",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29GBCFM8104N1ZQ",
+    "name": "Mysore Agro Supplies",
+    "state_code": "29",
+    "default_rate": 5,
+    "phone": "+91 90000 00002",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29CHCFC7955B1Z0",
+    "name": "Chamundi Packaging",
+    "state_code": "29",
+    "default_rate": 18,
+    "phone": "+91 90000 00003",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29SDHCK2013S1ZF",
+    "name": "Kaveri Plastics",
+    "state_code": "29",
+    "default_rate": 18,
+    "phone": "+91 90000 00004",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29SMBPN4622B1ZW",
+    "name": "Nandi Hardware",
+    "state_code": "29",
+    "default_rate": 18,
+    "phone": "+91 90000 00005",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29REJFS7867E1ZV",
+    "name": "Sahyadri Seeds",
+    "state_code": "29",
+    "default_rate": 5,
+    "phone": "+91 90000 00006",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29RDSPM6054R1ZX",
+    "name": "Malnad Spices",
+    "state_code": "29",
+    "default_rate": 5,
+    "phone": "+91 90000 00007",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29VFDCT4078L1ZW",
+    "name": "Tumkur Steel Works",
+    "state_code": "29",
+    "default_rate": 18,
+    "phone": "+91 90000 00008",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29DRWFH2028S1ZC",
+    "name": "Hassan Fertilisers",
+    "state_code": "29",
+    "default_rate": 5,
+    "phone": "+91 90000 00009",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29BTGPB9133V1ZT",
+    "name": "Bharath Electricals",
+    "state_code": "29",
+    "default_rate": 18,
+    "phone": "+91 90000 00010",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "33RNYCC6146O1ZN",
+    "name": "Coimbatore Pumps",
+    "state_code": "33",
+    "default_rate": 18,
+    "phone": "+91 90000 00011",
+    "language": "ta-IN"
+  },
+  {
+    "gstin": "27SOLCP5911H1ZX",
+    "name": "Pune Agro Chem",
+    "state_code": "27",
+    "default_rate": 18,
+    "phone": "+91 90000 00012",
+    "language": "en-IN"
+  },
+  {
+    "gstin": "32ZFWFK4999C1ZU",
+    "name": "Kochi Coir Products",
+    "state_code": "32",
+    "default_rate": 5,
+    "phone": "+91 90000 00013",
+    "language": "en-IN"
+  },
+  {
+    "gstin": "29SJQPM9111K1Z3",
+    "name": "Mandya Jaggery Traders",
+    "state_code": "29",
+    "default_rate": 5,
+    "phone": "+91 90000 00014",
+    "language": "kn-IN"
+  },
+  {
+    "gstin": "29XOJFU2199D1ZD",
+    "name": "Udupi Logistics",
+    "state_code": "29",
+    "default_rate": 18,
+    "phone": "+91 90000 00015",
+    "language": "kn-IN"
+  }
+]

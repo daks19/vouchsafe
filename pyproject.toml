@@ -1,0 +1,25 @@
+[project]
+name = "gstagent"
+version = "0.1.0"
+description = "Agentic GST compliance assistant for micro enterprises (Tech4Bharat 2026 PS 3.1)"
+readme = "README.md"
+authors = [
+    { name = "Dakshan Kumar" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.162.7",
+    "pydantic>=2.14.3",
+    "pyyaml>=6.0.3",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.8,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.2.0",
+]

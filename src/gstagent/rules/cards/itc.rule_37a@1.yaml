@@ -1,0 +1,21 @@
+id: itc.rule_37a
+version: 1
+title: Reverse ITC when the supplier has not filed GSTR-3B for the period (Rule 37A)
+effective_from: 2023-10-01
+selects_on: the check date
+params:
+  supplier_cutoff: {month: 9, day: 30}     # 30 September after the end of the financial year
+  reverse_by: {month: 11, day: 30}         # 30 November after the end of the financial year
+citations:
+  - "CGST Rule 37A (inserted by Notification 38/2023-CT): ITC on an invoice the supplier reported in GSTR-1/IFF but whose GSTR-3B for that period is not furnished by 30 September after the FY is reversed by 30 November; it can be re-availed once the supplier files"
+verify_before_finale: true
+notes: >-
+  A year-end mechanism, not a real-time payment check. Commencement date of the rule to be confirmed with a CA.
+  Filing status never proves tax on one invoice was paid.
+examples:
+  - {name: supplier filed by the cutoff, as_of: 2026-11-18, inputs: {invoice_date: 2025-08-12, supplier_3b_filed_by_cutoff: true, check_date: 2026-11-18},
+     expect: {reversal_required: false, supplier_cutoff: 2026-09-30, reverse_by: 2026-11-30}}
+  - {name: supplier silent past the cutoff, as_of: 2026-11-18, inputs: {invoice_date: 2025-08-12, supplier_3b_filed_by_cutoff: false, check_date: 2026-11-18},
+     expect: {reversal_required: true, reverse_by: 2026-11-30, days_left: 12}}
+  - {name: too early to say, as_of: 2026-06-01, inputs: {invoice_date: 2025-08-12, supplier_3b_filed_by_cutoff: false, check_date: 2026-06-01},
+     expect: {reversal_required: false, supplier_cutoff: 2026-09-30}}
