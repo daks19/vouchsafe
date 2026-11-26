@@ -121,3 +121,29 @@ def test_bill_schema_fits_groq_strict_mode():
                                              and set(s["required"]) == set(s["properties"])
                                              and all(strict(v) for v in s["properties"].values()))
     assert strict(BILL) and json.dumps(BILL)
+
+
+def test_busy_gemini_falls_back_to_groq_when_its_key_is_set(env):
+    env.setenv("GEMINI_API_KEY", "g")
+    env.setenv("GROQ_API_KEY", "q")
+    env.setenv("LLM_MODEL", "gemini-3.6-flash")   # names a Gemini model; must not be sent to Groq
+    sent = []
+
+    def post(url, headers, json, timeout):
+        sent.append((url.split("/")[2], json["model"]))
+        req = httpx.Request("POST", url)
+        if "googleapis" in url:
+            return httpx.Response(429, json={"error": {"message": "quota"}}, request=req)
+        return httpx.Response(200, request=req, json={"choices": [{"finish_reason": "stop",
+                                                                   "message": {"content": '{"a": "z"}'}}]})
+    env.setattr(llm.httpx, "post", post)
+    assert llm.ask_json([TEXT], SCHEMA) == '{"a": "z"}'
+    assert sent == [("generativelanguage.googleapis.com", "gemini-3.6-flash"),
+                    ("api.groq.com", llm.GROQ_TEXT_MODEL)]
+
+
+def test_without_a_groq_key_busy_gemini_is_still_an_error(env):
+    env.setenv("GEMINI_API_KEY", "g")
+    env.setattr(llm.httpx, "post", fake_post({"error": {}}, status=503)[0])
+    with pytest.raises(llm.Busy):
+        llm.ask_json([TEXT], SCHEMA)

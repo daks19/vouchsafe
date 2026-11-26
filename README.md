@@ -20,7 +20,7 @@ Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.
 
 ```bash
 uv sync
-uv run pytest -q                                    # 207 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages
+uv run pytest -q                                    # 209 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages
 uv run python -m gstagent.demo                      # reconciliation + rule checks on the synthetic trader
 uv run python -m gstagent.synth.generate            # regenerate data/synthetic (deterministic, --seed 7)
 uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; docs at /docs
@@ -53,7 +53,7 @@ state → re-snap). Their `.reply.json` files are hand-made in Claude's reply sc
 | `src/gstagent/ca_queue.py` | Photo → extract → validate → matcher + rule cards → CA queue rows. CLI and FastAPI app. |
 | `src/gstagent/agent/` | LangGraph agent: one thread per case (`cases.py`), W1/W2/W3 graph with hash-bound approval pauses and an append-only audit log (`graph.py`), Claude reading the shop's reply (`reply.py`), scripted demo (`demo.py`). SQLite checkpointer keeps cases across restarts. |
 | `src/gstagent/language.py` | Supported languages (Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Odia, Punjabi, English), GSTIN/PAN masking, translation. Each message goes out in the recipient's language. |
-| `src/gstagent/llm.py` | The one place that calls an LLM, always for schema-checked JSON. `LLM_PROVIDER` picks Gemini (default, free), Groq (free) or Claude (paid). |
+| `src/gstagent/llm.py` | The one place that calls an LLM, always for schema-checked JSON. `LLM_PROVIDER` picks Gemini (default, free), Groq (free) or Claude (paid); a busy Gemini falls back to Groq. |
 | `src/gstagent/snapshots.py` | What GSTR-2B showed about a bill's supplier, timestamped and hashed (W3 evidence). |
 | `src/gstagent/matcher.py` | Bills vs GSTR-2B in 4 tiers (exact, normalised, fuzzy, anchored), with a plain reason on every row. |
 | `src/gstagent/guard.py` | Number guard: blocks any message containing a figure the case did not compute. |

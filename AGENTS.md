@@ -16,7 +16,7 @@ the right person about each mismatch and keeps evidence. It prepares. A human ap
 
 ```bash
 uv sync
-uv run pytest -q                       # must stay green; currently 207 tests
+uv run pytest -q                       # must stay green; currently 209 tests
 uv run python -m gstagent.demo         # reconciliation on the synthetic trader
 uv run python -m gstagent.ca_queue tests/fixtures/bills/nandi_missing_in_2b.png \
     --replay tests/fixtures/bills/nandi_missing_in_2b.reply.json   # bill photo -> CA queue, offline
@@ -50,7 +50,7 @@ Python 3.12, managed with `uv`. Add packages with `uv add` (runtime) or `uv add 
   All LLM calls go through `llm.py`.
 - Tests must run offline. Mock every LLM, Sarvam or WhatsApp call with a recorded reply in `tests/fixtures/`.
 - LLM: `LLM_PROVIDER` in `.env` picks `gemini` (default, free tier), `groq` (free tier) or `claude` (paid).
-  Default models are in `llm.py`; `LLM_MODEL` overrides one. See `.env.example`. Don't change the defaults
+  If Gemini is busy, Groq is tried when its key is set too (and the other way round). Default models are in `llm.py`; `LLM_MODEL` overrides one. See `.env.example`. Don't change the defaults
   without the team's say. Google may use free-tier data for training: fictional data only on the free tier.
 
 ## Working rules

@@ -70,6 +70,11 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
 
+### 2026-11-26 (night) · Dakshan (with Claude)
+- Branch `dakshan/groq-fallback`: a busy or rate-limited Gemini now falls back to Groq when `GROQ_API_KEY` is
+  set. 209 tests pass. **Not verified:** a live Groq call (no Groq key yet).
+- **Next:** add a free Groq key to `.env` and read the 3 fixture bills with `LLM_PROVIDER=groq` once.
+
 ### 2026-11-26 (evening) · Dakshan (with Claude)
 - Merged the agent loop into `main` (PR #1).
 - Branch `dakshan/llm-switch`: `llm.py` now picks the LLM from `LLM_PROVIDER` (gemini default, groq, claude),
