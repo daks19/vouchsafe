@@ -5,6 +5,9 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- LLM provider switch in `llm.py`: `LLM_PROVIDER=gemini` (default, free tier, `gemini-3.8-flash`), `groq`
+  (free tier; `qwen/qwen3.8-27b` for bill photos, `openai/gpt-oss-120b` for text) or `claude` (paid). Keys and
+  `LLM_MODEL` come from the shell or a git-ignored `.env` (`.env.example` shows them). 9 offline tests.
 - Agent loop (`src/gstagent/agent/`, LangGraph + SQLite checkpointer): one case per mismatch, three workflows.
   - W1 confirm the delivery: ask the receiver, read the reply (Claude, `reply.py`), then ask for the bill,
     mark Pending in IMS, or hand to the CA. Asks at most twice.

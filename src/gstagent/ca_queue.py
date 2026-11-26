@@ -148,7 +148,7 @@ async def add_bill(request: Request):
     except LLMError as e:
         raise HTTPException(422, str(e)) from e
     except anthropic.AnthropicError as e:
-        raise HTTPException(502, f"could not reach Claude: {e}") from e
+        raise HTTPException(502, f"could not reach the LLM: {e}") from e
     QUEUE.extend(r.queue)
     if r.bill:
         SEEN.append(r.bill)

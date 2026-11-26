@@ -2,7 +2,7 @@
 
     uv run python -m gstagent.agent.demo                 # offline: in-process mock portal, scripted reply reading
     uv run python -m gstagent.agent.demo --lang ta-IN    # the shop speaks Tamil (any code in gstagent.language)
-    uv run python -m gstagent.agent.demo --live          # Claude translates and reads replies (ANTHROPIC_API_KEY)
+    uv run python -m gstagent.agent.demo --live          # the LLM translates and reads replies (key in .env, see llm.py)
 
 Offline, messages are shown in English with a note; --live sends each one in the recipient's language.
 
@@ -87,7 +87,7 @@ def run(agent: Agent, portal: httpx.Client, shop_lang: str | None = None) -> dic
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--lang", choices=sorted(LANGUAGES), help="the shop's language (default: the profile's)")
-    ap.add_argument("--live", action="store_true", help="Claude translates messages and reads the reply")
+    ap.add_argument("--live", action="store_true", help="the LLM translates messages and reads the reply")
     a = ap.parse_args(argv)
     classify = reply.classify if a.live else (lambda q, r: SCRIPTED.get(r, "unclear"))
     portal = TestClient(mock_app)
