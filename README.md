@@ -8,10 +8,11 @@ An agent that runs a micro business's GST close, from the bills in its WhatsApp 
 It chases the suppliers whose filings put the owner's input credit at risk, explains to the owner in
 his own language what is about to be filed in his name, and **stops at the line where a professional files**.
 
-> **Status: P0 pipeline.** A bill photo goes through Claude vision (`extract.py`), Python validators
-> (`validate.py`) and the matcher + rule cards, and lands in a CA exception queue (`ca_queue.py`) with
-> issue, reason, cited rule and recommended action. Synthetic data and a simulated GST portal.
-> No agent loop, WhatsApp or voice yet. See [PLAN.md](PLAN.md).
+> **Status: P0 pipeline + agent loop (branch `dakshan/agent-loop`).** A bill photo goes through Claude vision
+> (`extract.py`), Python validators (`validate.py`) and the matcher + rule cards into a CA exception queue
+> (`ca_queue.py`). A LangGraph agent (`agent/`) runs the three workflows on each mismatch, pausing for the
+> owner's approval before every outward action. Synthetic data, simulated GST portal and message channel.
+> No real WhatsApp or voice yet. See [PLAN.md](PLAN.md).
 
 Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.md](AGENTS.md) · Changes: [CHANGELOG.md](CHANGELOG.md)
 
@@ -19,7 +20,7 @@ Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.
 
 ```bash
 uv sync
-uv run pytest -q                                    # 163 tests: rule-card examples, matcher, guard, mock portal, bill pipeline
+uv run pytest -q                                    # 195 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages
 uv run python -m gstagent.demo                      # reconciliation + rule checks on the synthetic trader
 uv run python -m gstagent.synth.generate            # regenerate data/synthetic (deterministic, --seed 7)
 uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; docs at /docs
@@ -30,6 +31,10 @@ uv run python -m gstagent.ca_queue tests/fixtures/bills/nandi_missing_in_2b.png 
 # Live: export ANTHROPIC_API_KEY=... and drop --replay (add --save-reply out.json to keep the reply)
 uv run uvicorn gstagent.ca_queue:app --port 8200        # POST raw image bytes to /ca-queue/bills; GET /ca-queue
 uv run python -m gstagent.synth.bill_images             # re-render the fixture bill photos (dev group: Pillow)
+
+# Agent loop: W1, W2, W3 end to end on the in-process mock portal, approving every pause; prints each audit log.
+uv run python -m gstagent.agent.demo --lang hi-IN       # shop speaks Hindi; any of the 11 codes in language.py
+# add --live so Claude translates each message into the recipient's language and reads the reply
 ```
 
 Fixture bills (`tests/fixtures/bills/`): `nandi_missing_in_2b` (supplier hasn't reported it → ITC at risk),
@@ -46,6 +51,10 @@ state → re-snap). Their `.reply.json` files are hand-made in Claude's reply sc
 | `src/gstagent/extract.py` | Claude vision reads a bill photo into fixed fields, each with a confidence; unclear = null. Only the image is sent; the prompt has no GSTIN/PAN. |
 | `src/gstagent/validate.py` | Checks on what Claude read: required fields + confidence, GSTIN check digit, CGST/SGST vs IGST split (`gst.tax_split`), arithmetic. A failure is a "resnap" task. |
 | `src/gstagent/ca_queue.py` | Photo → extract → validate → matcher + rule cards → CA queue rows. CLI and FastAPI app. |
+| `src/gstagent/agent/` | LangGraph agent: one thread per case (`cases.py`), W1/W2/W3 graph with hash-bound approval pauses and an append-only audit log (`graph.py`), Claude reading the shop's reply (`reply.py`), scripted demo (`demo.py`). SQLite checkpointer keeps cases across restarts. |
+| `src/gstagent/language.py` | Supported languages (Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Odia, Punjabi, English), GSTIN/PAN masking, translation. Each message goes out in the recipient's language. |
+| `src/gstagent/llm.py` | The one place that calls Claude (JSON-schema output, server-side fallback). |
+| `src/gstagent/snapshots.py` | What GSTR-2B showed about a bill's supplier, timestamped and hashed (W3 evidence). |
 | `src/gstagent/matcher.py` | Bills vs GSTR-2B in 4 tiers (exact, normalised, fuzzy, anchored), with a plain reason on every row. |
 | `src/gstagent/guard.py` | Number guard: blocks any message containing a figure the case did not compute. |
 | `src/gstagent/mock_gstn/` | **Simulated** GST portal: GSTR-2B (GSP-documented JSON shape), IMS view/save, "supplier files GSTR-1A" trigger. |
@@ -130,6 +139,7 @@ The hackathon requires original work. Ideas we borrowed are listed here; all cod
 
 - **GST portal**: simulated (`mock_gstn`). Real GSTN/GSP access is not available to student teams.
 - **E-way bill portal, e-invoice IRP**: not yet; mock with NIC field names next.
+- **Messages to the shop and suppliers**: simulated; the agent records them in each case's outbox.
 - **WhatsApp**: not yet; Meta Cloud API test number (5 recipients, templates needed for supplier chasers).
 - **Voice**: not yet; Sarvam STT/TTS behind an adapter.
 - **JanAI Café / Asha**: no public API; any integration must be shown as a labelled mock.

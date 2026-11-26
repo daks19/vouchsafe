@@ -22,7 +22,8 @@ from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 from gstagent import data, extract
-from gstagent.extract import BillRead, ExtractionError
+from gstagent.extract import BillRead
+from gstagent.llm import LLMError, NoCredentials
 from gstagent.matcher import reconcile
 from gstagent.models import BookEntry, Match, MatchStatus
 from gstagent.rules import RuleBook
@@ -142,9 +143,9 @@ async def add_bill(request: Request):
         raise HTTPException(400, "empty body")
     try:
         r = process(image, media_type, CALL, SEEN)
-    except extract.NoCredentials as e:
+    except NoCredentials as e:
         raise HTTPException(503, str(e)) from e
-    except ExtractionError as e:
+    except LLMError as e:
         raise HTTPException(422, str(e)) from e
     except anthropic.AnthropicError as e:
         raise HTTPException(502, f"could not reach Claude: {e}") from e
@@ -185,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
             return text
     try:
         r = process(a.image.read_bytes(), extract.media_type_of(a.image), call)
-    except (ExtractionError, anthropic.AnthropicError, OSError) as e:
+    except (LLMError, anthropic.AnthropicError, OSError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
 

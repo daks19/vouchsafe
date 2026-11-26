@@ -9,8 +9,8 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 | Due | Milestone | Done when | Status | Owner |
 |---|---|---|---|---|
 | 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Built, live Claude call not yet tested | Dakshan |
-| 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Not started |  |
-| 7 Dec | **Real channels** | WhatsApp question and Sarvam voice reply (Kannada first) on a low-cost Android | Not started |  |
+| 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built on branch `dakshan/agent-loop`, not merged | Dakshan |
+| 7 Dec | **Real channels** | WhatsApp question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android | Not started |  |
 | 10 Dec | **CA dashboard + accuracy** | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills | Not started |  |
 | 12 Dec | **Hardening** | Demo script rehearsed, video recorded, README says what is simulated and what was reused | Not started |  |
 | 13 Dec | **Prototype submitted** | | |  |
@@ -27,15 +27,22 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 
 New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()` before every outward action).
 
-- [ ] Case store: one case per mismatch, built from the CA-queue rows and `models.Case`.
-- [ ] **W1 Confirm the delivery:** a 2B line with no bill → ask the receiver (text first; voice comes on 7 Dec).
+- [x] Cases: one per mismatch (`agent/cases.py`), each a LangGraph thread saved in SQLite. Not yet `models.Case`.
+- [x] **W1 Confirm the delivery:** a 2B line with no bill → ask the receiver (text first; voice comes on 7 Dec).
       Three answers: arrived (ask for the bill) / still coming (recommend IMS Pending) / never ordered (CA exception).
-- [ ] **W2 Supplier correction:** owner approves → message the supplier → wait for the GSTR-1A event in
+- [x] **W2 Supplier correction:** owner approves → message the supplier → wait for the GSTR-1A event in
       `mock_gstn` → re-match → close, or escalate to the CA with the 16(4) date.
-- [ ] **W3 Keep purchase evidence:** add a "cancellation backdated" event to `mock_gstn`, plus supplier snapshots
+- [x] **W3 Keep purchase evidence:** add a "cancellation backdated" event to `mock_gstn`, plus supplier snapshots
       (`snapshots.py`) → list exposed invoices → evidence pack (`itc.evidence_pack`), with proof present and missing.
-- [ ] Append-only audit log (`case.open`, `shop.asked`, `supplier.messaged`, `ims.recommended`, `ca.approved`).
-- [ ] Agent-loop tests on the mock portal: each workflow twice in a row, with approvals replayed.
+- [x] Append-only audit log per case (`case.open`, `owner.approved`, `shop.asked`, `supplier.messaged`,
+      `ims.pending_saved`, `ca.handoff`, `case.closed`). `ca.approved` comes with the CA dashboard (10 Dec).
+- [x] Agent-loop tests on the mock portal: each workflow twice in a row, with approvals replayed (`tests/test_agent.py`).
+- [ ] Review and merge `dakshan/agent-loop` into `main` by pull request.
+- [x] Multilingual: messages go out in each recipient's language (shop: profile; supplier: own record), with the
+      English beside it for the owner; replies understood in any Indian language. 11 languages in `language.py`.
+- [ ] Run the demo with `--live` in several languages (e.g. `--lang hi-IN`, `ta-IN`, `te-IN`) so Claude really
+      translates and reads replies; have native speakers check the messages and the demo replies (needs a key).
+- [ ] Group a supplier's open W2 cases into one message (today: one message per bill).
 
 ## Later milestones, in short
 
@@ -60,6 +67,16 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
+
+### 2026-11-26 (later) · Dakshan (with Claude)
+- Built the agent loop on branch `dakshan/agent-loop`: `agent/` (LangGraph + SQLite), W1/W2/W3, hash-bound owner
+  approvals, audit log, `llm.py`, `snapshots.py`, mock-portal cancellation event.
+- Made it multilingual (was Kannada-only): `language.py` (11 languages, GSTIN/PAN masking, translation),
+  per-recipient message language, replies in any language, suppliers in the data now use 7 languages. 195 tests pass.
+- `uv run python -m gstagent.agent.demo` runs all three workflows end to end offline.
+- **Not verified:** Claude translating and reading replies live (stubbed in tests and the offline demo).
+- **Next:** open a pull request for the branch; then the 7 Dec channels milestone (WhatsApp + Sarvam) plugs into
+  the `send` node and the `reply` pause in `agent/graph.py`.
 
 ### 2026-11-26 · Dakshan (with Claude)
 - Built the P0 pipeline: `extract.py`, `validate.py`, `ca_queue.py`, rule card `gst.tax_split@1`, three fixture bills

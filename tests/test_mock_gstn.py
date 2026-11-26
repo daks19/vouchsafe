@@ -47,3 +47,13 @@ def test_reverse_charge_records_are_not_in_ims():
     r = client.post("/mock-gstn/ims/save", json={**Q, "actions": [
         {"ctin": first["ctin"], "inum": first["inv"][0]["inum"], "action": "PENDING"}]})
     assert r.status_code == 422 and "not in IMS" in r.json()["detail"]["reason"]
+
+
+def test_backdated_cancellation_shows_in_supplier_status():
+    ctin = PROFILE["gstin"]  # any GSTIN works; the simulation does not check it exists
+    assert client.get(f"/mock-gstn/suppliers/{ctin}").json()["status"] == "Active"
+    client.post("/mock-gstn/events/supplier-cancelled", json={"ctin": ctin, "effective_from": "2026-07-01"})
+    s = client.get(f"/mock-gstn/suppliers/{ctin}").json()
+    assert s["status"] == "Cancelled" and s["effective_from"] == "2026-07-01"
+    client.post("/mock-gstn/reset")
+    assert client.get(f"/mock-gstn/suppliers/{ctin}").json()["status"] == "Active"
