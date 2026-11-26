@@ -8,8 +8,8 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 
 | Due | Milestone | Done when | Status | Owner |
 |---|---|---|---|---|
-| 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Built, live Claude call not yet tested | Dakshan |
-| 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built on branch `dakshan/agent-loop`, not merged | Dakshan |
+| 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Built; live check passed on Gemini free tier (26 Nov) | Dakshan |
+| 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built, merged (PR #1); live run passed in Hindi, Tamil, Telugu (26 Nov) | Dakshan |
 | 7 Dec | **Real channels** | WhatsApp question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android | Not started |  |
 | 10 Dec | **CA dashboard + accuracy** | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills | Not started |  |
 | 12 Dec | **Hardening** | Demo script rehearsed, video recorded, README says what is simulated and what was reused | Not started |  |
@@ -19,7 +19,8 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 
 ## P0: left to finish (by 29 Nov)
 
-- [ ] Run the live Claude call once with a key: `uv run python -m gstagent.ca_queue <png> --save-reply out.json`.
+- [x] Run the live LLM call once with a key (`cp .env.example .env`, Gemini's key is free):
+      `uv run python -m gstagent.ca_queue <png> --save-reply out.json`.
       Compare it with the hand-made fixture, then replace the three `.reply.json` files with real recordings.
 - [ ] Decide whether the README "Status" line can say P0 is done (only after the live check passes).
 
@@ -37,10 +38,10 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 - [x] Append-only audit log per case (`case.open`, `owner.approved`, `shop.asked`, `supplier.messaged`,
       `ims.pending_saved`, `ca.handoff`, `case.closed`). `ca.approved` comes with the CA dashboard (10 Dec).
 - [x] Agent-loop tests on the mock portal: each workflow twice in a row, with approvals replayed (`tests/test_agent.py`).
-- [ ] Review and merge `dakshan/agent-loop` into `main` by pull request.
+- [x] Review and merge `dakshan/agent-loop` into `main` by pull request (PR #1).
 - [x] Multilingual: messages go out in each recipient's language (shop: profile; supplier: own record), with the
       English beside it for the owner; replies understood in any Indian language. 11 languages in `language.py`.
-- [ ] Run the demo with `--live` in several languages (e.g. `--lang hi-IN`, `ta-IN`, `te-IN`) so Claude really
+- [ ] Run the demo with `--live` in several languages (e.g. `--lang hi-IN`, `ta-IN`, `te-IN`) so the LLM really
       translates and reads replies; have native speakers check the messages and the demo replies (needs a key).
 - [ ] Group a supplier's open W2 cases into one message (today: one message per bill).
 
@@ -60,6 +61,7 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 - Arithmetic check assumes one GST rate per bill.
 - CA-queue API keeps its state in memory.
 - Demo persona is "Ramesh, hardware trader", but the synthetic trade name is "Sri Lakshmi Agro Traders". Pick one before the video.
+- If Gemini's free model reads bills badly, try `LLM_PROVIDER=groq` or `claude` (paid) on the same 3 fixtures.
 - Lyzr AI credits: terms unknown. Keep LangGraph unless the hackathon requires Lyzr.
 - Cards marked `verify_before_finale: true` need checking against primary text (CBIC/GSTN) before 27 Dec.
 
@@ -67,6 +69,16 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
+
+### 2026-11-26 (evening) · Dakshan (with Claude)
+- Merged the agent loop into `main` (PR #1).
+- Branch `dakshan/llm-switch`: `llm.py` now picks the LLM from `LLM_PROVIDER` (gemini default, groq, claude),
+  keys from a git-ignored `.env` (`.env.example`). 204 tests pass.
+- Live check on Gemini free tier: 3 fixture bills read right; `--live` demo in Hindi, Tamil, Telugu ran end to end.
+  Found and fixed: translations in the wrong script (Tamil came back in Kannada script). Busy models fall back.
+- **Not verified:** Groq and Claude live; native-speaker check of the translations; the free tier is often busy
+  (503), so rehearse the demo early and keep `--replay` fixtures as backup.
+- **Next:** replace the 3 hand-made `.reply.json` fixtures with the live recordings; start the 7 Dec channels.
 
 ### 2026-11-26 (later) · Dakshan (with Claude)
 - Built the agent loop on branch `dakshan/agent-loop`: `agent/` (LangGraph + SQLite), W1/W2/W3, hash-bound owner

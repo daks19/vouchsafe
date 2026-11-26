@@ -24,6 +24,21 @@ STATE_LANGUAGE = {
     "24": "gu-IN", "27": "mr-IN", "29": "kn-IN", "32": "ml-IN", "33": "ta-IN", "36": "te-IN", "37": "te-IN",
 }
 
+# Unicode block of each language's own script; a translation must be written in it.
+SCRIPTS = {
+    "hi-IN": (0x0900, 0x097F), "mr-IN": (0x0900, 0x097F), "bn-IN": (0x0980, 0x09FF), "pa-IN": (0x0A00, 0x0A7F),
+    "gu-IN": (0x0A80, 0x0AFF), "od-IN": (0x0B00, 0x0B7F), "ta-IN": (0x0B80, 0x0BFF), "te-IN": (0x0C00, 0x0C7F),
+    "kn-IN": (0x0C80, 0x0CFF), "ml-IN": (0x0D00, 0x0D7F),
+}
+
+
+def in_script(text: str, lang: str) -> bool:
+    """Most non-Latin letters are in the language's own script (Latin trade words and IDs are fine)."""
+    lo, hi = SCRIPTS[lang]
+    letters = [c for c in text if c.isalpha() and ord(c) > 0x024F]
+    return bool(letters) and sum(lo <= ord(c) <= hi for c in letters) >= 0.9 * len(letters)
+
+
 _IDS = re.compile(r"\b\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z][A-Z0-9][0-9A-Z]\b|\b[A-Z]{5}\d{4}[A-Z]\b")  # GSTIN, PAN
 
 SCHEMA = {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"],
@@ -53,7 +68,8 @@ def translate(text: str, lang: str) -> str:
         return text
     masked, ids = mask_ids(text)
     out = ask_json([{"type": "text", "text": (
-        f"Translate this message into {LANGUAGES.get(lang, lang)} for a small business in India. Use plain, polite, "
+        f"Translate this message into {LANGUAGES.get(lang, lang)}, written in the {LANGUAGES.get(lang, lang)} script "
+        "(not Latin letters), for a small business in India. Use plain, polite, "
         "everyday words a shopkeeper would use; keep English trade words people say anyway (bill, invoice, GST). "
         "Keep every number, ₹ amount, date, invoice number, form name (GSTR-2B, GSTR-1A, GSTR-1, IFF, IMS) and every "
         "[[ID..]] token exactly as written, in Western digits.\n\n" + masked)}], SCHEMA, effort="low")
@@ -63,4 +79,6 @@ def translate(text: str, lang: str) -> str:
         raise LLMError(f"translation was not in the expected shape: {e}") from e
     if any(t not in result for t in ids):
         raise LLMError("translation dropped a GSTIN/PAN placeholder")
+    if lang in SCRIPTS and not in_script(result, lang):
+        raise LLMError(f"translation is not in the {LANGUAGES[lang]} script")
     return unmask(result, ids)

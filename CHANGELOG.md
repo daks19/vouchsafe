@@ -5,6 +5,18 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- LLM provider switch in `llm.py`: `LLM_PROVIDER=gemini` (default, free tier; `gemini-3.8-flash`, falling back to `gemini-3.6-flash` when busy), `groq`
+  (free tier; `qwen/qwen3.8-27b` for bill photos, `openai/gpt-oss-120b` for text) or `claude` (paid). Keys and
+  `LLM_MODEL` come from the shell or a git-ignored `.env` (`.env.example` shows them). 10 offline tests.
+- Live check (26 Nov, Gemini free tier): all 3 fixture bills read correctly (only case and `0` vs `0.00` differ;
+  the wrong-split bill was caught). Agent demo `--live` in Hindi, Tamil and Telugu ran end to end; replies read right.
+- Free-tier fallback: when a Gemini model is busy (429/500/503 or timeout) the next free model is tried
+  (`gemini-3.8-flash` → `gemini-3.6-flash` → `gemini-3.5-flash-lite`).
+
+### Fixed
+- A translation in the wrong script is refused (live, a Tamil message came back in Kannada script; Hindi came
+  back in Latin letters). The prompt asks for the native script; `language.in_script()` checks it; a refused
+  translation goes out in English with a note, as before.
 - Agent loop (`src/gstagent/agent/`, LangGraph + SQLite checkpointer): one case per mismatch, three workflows.
   - W1 confirm the delivery: ask the receiver, read the reply (Claude, `reply.py`), then ask for the bill,
     mark Pending in IMS, or hand to the CA. Asks at most twice.

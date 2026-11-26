@@ -20,7 +20,7 @@ Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.
 
 ```bash
 uv sync
-uv run pytest -q                                    # 195 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages
+uv run pytest -q                                    # 207 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages
 uv run python -m gstagent.demo                      # reconciliation + rule checks on the synthetic trader
 uv run python -m gstagent.synth.generate            # regenerate data/synthetic (deterministic, --seed 7)
 uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; docs at /docs
@@ -28,13 +28,13 @@ uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; 
 # Bill photo -> CA-queue exception. --replay uses a saved Claude reply (offline, no key needed).
 uv run python -m gstagent.ca_queue tests/fixtures/bills/nandi_missing_in_2b.png \
     --replay tests/fixtures/bills/nandi_missing_in_2b.reply.json
-# Live: export ANTHROPIC_API_KEY=... and drop --replay (add --save-reply out.json to keep the reply)
+# Live: cp .env.example .env, add a key (Gemini's is free), drop --replay (--save-reply out.json keeps the reply)
 uv run uvicorn gstagent.ca_queue:app --port 8200        # POST raw image bytes to /ca-queue/bills; GET /ca-queue
 uv run python -m gstagent.synth.bill_images             # re-render the fixture bill photos (dev group: Pillow)
 
 # Agent loop: W1, W2, W3 end to end on the in-process mock portal, approving every pause; prints each audit log.
 uv run python -m gstagent.agent.demo --lang hi-IN       # shop speaks Hindi; any of the 11 codes in language.py
-# add --live so Claude translates each message into the recipient's language and reads the reply
+# add --live so the LLM translates each message into the recipient's language and reads the reply
 ```
 
 Fixture bills (`tests/fixtures/bills/`): `nandi_missing_in_2b` (supplier hasn't reported it → ITC at risk),
@@ -53,7 +53,7 @@ state → re-snap). Their `.reply.json` files are hand-made in Claude's reply sc
 | `src/gstagent/ca_queue.py` | Photo → extract → validate → matcher + rule cards → CA queue rows. CLI and FastAPI app. |
 | `src/gstagent/agent/` | LangGraph agent: one thread per case (`cases.py`), W1/W2/W3 graph with hash-bound approval pauses and an append-only audit log (`graph.py`), Claude reading the shop's reply (`reply.py`), scripted demo (`demo.py`). SQLite checkpointer keeps cases across restarts. |
 | `src/gstagent/language.py` | Supported languages (Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Odia, Punjabi, English), GSTIN/PAN masking, translation. Each message goes out in the recipient's language. |
-| `src/gstagent/llm.py` | The one place that calls Claude (JSON-schema output, server-side fallback). |
+| `src/gstagent/llm.py` | The one place that calls an LLM, always for schema-checked JSON. `LLM_PROVIDER` picks Gemini (default, free), Groq (free) or Claude (paid). |
 | `src/gstagent/snapshots.py` | What GSTR-2B showed about a bill's supplier, timestamped and hashed (W3 evidence). |
 | `src/gstagent/matcher.py` | Bills vs GSTR-2B in 4 tiers (exact, normalised, fuzzy, anchored), with a plain reason on every row. |
 | `src/gstagent/guard.py` | Number guard: blocks any message containing a figure the case did not compute. |

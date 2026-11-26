@@ -232,3 +232,15 @@ def test_translation_that_drops_an_id_is_refused(monkeypatch):
     monkeypatch.setattr(language, "ask_json", lambda c, s, effort="medium": json.dumps({"text": "no id here"}))
     with pytest.raises(language.LLMError):
         language.translate("GSTIN 29KEMPR1791C1ZW", "ta-IN")
+
+
+def test_translation_in_the_wrong_script_is_refused(monkeypatch):
+    for wrong in ("ಚಾಮುಂಡಿ ಪ್ಯಾಕೇಜಿಂಗ್ CP/7781",            # Kannada script for a Tamil reader (seen live)
+                  "Namaste. Yeh bill CP/7781 hai"):          # Hindi in Latin letters
+        monkeypatch.setattr(language, "ask_json", lambda c, s, effort="medium", w=wrong: json.dumps({"text": w}))
+        with pytest.raises(language.LLMError, match="script"):
+            language.translate("Bill CP/7781", "ta-IN" if "ಚ" in wrong else "hi-IN")
+
+
+def test_every_demo_reply_is_in_its_own_script():
+    assert all(language.in_script(r, lang) for lang, r in demo.REPLIES.items() if lang in language.SCRIPTS)
