@@ -21,7 +21,7 @@ import httpx
 
 PROVIDERS = ("gemini", "groq", "claude")
 MODEL = "claude-opus-5-5"
-GEMINI_MODEL = "gemini-3.8-flash"
+GEMINI_MODELS = ("gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite")  # free tier; the next one is tried when one is busy
 GROQ_TEXT_MODEL, GROQ_VISION_MODEL = "openai/gpt-oss-120b", "qwen/qwen3.8-27b"
 KEYS = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY", "claude": "ANTHROPIC_API_KEY"}
 TIMEOUT = 120
@@ -33,6 +33,10 @@ class LLMError(Exception):
 
 class NoCredentials(LLMError):
     pass
+
+
+class Busy(LLMError):
+    """Rate limit, overload or timeout: worth trying another model or again later."""
 
 
 def _load_dotenv(path: Path = Path(".env")) -> None:
@@ -68,9 +72,14 @@ def ask_json(content: list[dict], schema: dict, effort: str = "medium") -> str:
 
 
 def _post(url: str, headers: dict, body: dict) -> dict:
-    r = httpx.post(url, headers=headers, json=body, timeout=TIMEOUT)
+    try:
+        r = httpx.post(url, headers=headers, json=body, timeout=TIMEOUT)
+    except httpx.TimeoutException as e:
+        raise Busy(f"timed out: {e}") from e
     if r.status_code in (401, 403):
         raise NoCredentials(f"key refused ({r.status_code}): check it in .env")
+    if r.status_code in (429, 500, 503):
+        raise Busy(f"the AI service is busy or rate-limited (HTTP {r.status_code}); try again later")
     if r.status_code != 200:
         raise LLMError(f"HTTP {r.status_code}: {r.text[:300]}")
     return r.json()
@@ -81,10 +90,17 @@ def _gemini(content: list[dict], schema: dict, key: str) -> str:
     parts = [{"type": "text", "text": b["text"]} if b["type"] == "text"
              else {"type": "image", "data": b["source"]["data"], "mime_type": b["source"]["media_type"]}
              for b in content]
-    out = _post("https://generativelanguage.googleapis.com/v1beta/interactions",
-                {"x-goog-api-key": key},
-                {"model": os.environ.get("LLM_MODEL", GEMINI_MODEL), "input": parts, "store": False,
-                 "response_format": {"type": "text", "mime_type": "application/json", "schema": schema}})
+    models = [os.environ["LLM_MODEL"]] if os.environ.get("LLM_MODEL") else list(GEMINI_MODELS)
+    for i, model in enumerate(models):
+        try:
+            out = _post("https://generativelanguage.googleapis.com/v1beta/interactions",
+                        {"x-goog-api-key": key},
+                        {"model": model, "input": parts, "store": False,
+                         "response_format": {"type": "text", "mime_type": "application/json", "schema": schema}})
+            break
+        except Busy:
+            if i == len(models) - 1:
+                raise
     if out.get("status") != "completed":
         raise LLMError(f"Gemini stopped with status {out.get('status')!r}; try again")
     texts = [c["text"] for s in out.get("steps", []) if s.get("type") == "model_output"

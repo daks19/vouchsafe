@@ -38,9 +38,23 @@ def test_gemini_is_the_default_and_sends_image_and_schema(env):
     assert llm.ask_json([IMAGE, TEXT], SCHEMA) == '{"a": "x"}'
     s = sent[0]
     assert s["url"].endswith("/v1beta/interactions") and s["headers"] == {"x-goog-api-key": "g-key"}
-    assert s["body"]["model"] == llm.GEMINI_MODEL and s["body"]["store"] is False
+    assert s["body"]["model"] == llm.GEMINI_MODELS[0] and s["body"]["store"] is False
     assert s["body"]["input"] == [{"type": "image", "data": "QUJD", "mime_type": "image/png"}, TEXT]
     assert s["body"]["response_format"]["schema"] == SCHEMA
+
+
+def test_gemini_falls_back_to_the_next_free_model_when_busy(env):
+    env.setenv("GEMINI_API_KEY", "g")
+    sent = []
+
+    def post(url, headers, json, timeout):
+        sent.append(json["model"])
+        if len(sent) == 1:
+            return httpx.Response(503, json={"error": {"message": "high demand"}}, request=httpx.Request("POST", url))
+        return httpx.Response(200, request=httpx.Request("POST", url), json={"status": "completed", "steps": [
+            {"type": "model_output", "content": [{"type": "text", "text": "{}"}]}]})
+    env.setattr(llm.httpx, "post", post)
+    assert llm.ask_json([TEXT], SCHEMA) == "{}" and sent == list(llm.GEMINI_MODELS[:2])
 
 
 def test_groq_picks_the_vision_model_only_for_images(env):

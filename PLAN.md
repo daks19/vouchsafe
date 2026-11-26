@@ -8,8 +8,8 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 
 | Due | Milestone | Done when | Status | Owner |
 |---|---|---|---|---|
-| 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Built; live LLM call not yet tested (Gemini free tier is the default) | Dakshan |
-| 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built, merged (PR #1); live run not yet tested | Dakshan |
+| 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Built; live check passed on Gemini free tier (26 Nov) | Dakshan |
+| 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built, merged (PR #1); live run passed in Hindi, Tamil, Telugu (26 Nov) | Dakshan |
 | 7 Dec | **Real channels** | WhatsApp question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android | Not started |  |
 | 10 Dec | **CA dashboard + accuracy** | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills | Not started |  |
 | 12 Dec | **Hardening** | Demo script rehearsed, video recorded, README says what is simulated and what was reused | Not started |  |
@@ -19,7 +19,7 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 
 ## P0: left to finish (by 29 Nov)
 
-- [ ] Run the live LLM call once with a key (`cp .env.example .env`, Gemini's key is free):
+- [x] Run the live LLM call once with a key (`cp .env.example .env`, Gemini's key is free):
       `uv run python -m gstagent.ca_queue <png> --save-reply out.json`.
       Compare it with the hand-made fixture, then replace the three `.reply.json` files with real recordings.
 - [ ] Decide whether the README "Status" line can say P0 is done (only after the live check passes).
@@ -74,9 +74,11 @@ left, and what the next person should do first. Keep each entry to a few lines; 
 - Merged the agent loop into `main` (PR #1).
 - Branch `dakshan/llm-switch`: `llm.py` now picks the LLM from `LLM_PROVIDER` (gemini default, groq, claude),
   keys from a git-ignored `.env` (`.env.example`). 204 tests pass.
-- **Not verified:** any live call. The Gemini and Groq request shapes follow their docs as read today, but no
-  real request has been sent.
-- **Next:** get a free Gemini key, run the live check on the 3 fixture bills; then start the 7 Dec channels.
+- Live check on Gemini free tier: 3 fixture bills read right; `--live` demo in Hindi, Tamil, Telugu ran end to end.
+  Found and fixed: translations in the wrong script (Tamil came back in Kannada script). Busy models fall back.
+- **Not verified:** Groq and Claude live; native-speaker check of the translations; the free tier is often busy
+  (503), so rehearse the demo early and keep `--replay` fixtures as backup.
+- **Next:** replace the 3 hand-made `.reply.json` fixtures with the live recordings; start the 7 Dec channels.
 
 ### 2026-11-26 (later) · Dakshan (with Claude)
 - Built the agent loop on branch `dakshan/agent-loop`: `agent/` (LangGraph + SQLite), W1/W2/W3, hash-bound owner
