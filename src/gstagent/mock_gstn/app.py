@@ -1,7 +1,8 @@
 """SIMULATED GST portal for the demo. Not connected to GSTN.
 
 Serves GSTR-2B in the GSP-documented JSON shape, IMS actions validated by the
-`ims.treatment` rule card, and a demo trigger for "the supplier files GSTR-1A".
+`ims.treatment` rule card, and demo triggers for "the supplier files GSTR-1A" and
+"a supplier's registration is cancelled with a backdated effective date".
 
     uv run uvicorn gstagent.mock_gstn.app:app --reload --port 8100
 """
@@ -29,6 +30,7 @@ class _State:
         self.gstr2b = load_json("gstr2b_102026.json")
         self.pending_event = load_json("gstr1a_event.json")
         self.ims: dict[str, str] = {}
+        self.cancelled: dict[str, date] = {}  # ctin -> effective date of cancellation
 
     def period_start(self) -> date:
         p = self.gstr2b["data"]["rtnprd"]
@@ -95,6 +97,25 @@ def supplier_files_gstr1a(ev: SupplierFiles):
     added = len(pending["records"])
     STATE.pending_event = {**pending, "records": []}
     return {"added": added, "ctin": ev.ctin, "note": "GSTR-2B recomputed (simulated)"}
+
+
+class SupplierCancelled(BaseModel):
+    ctin: str
+    effective_from: date
+
+
+@app.post("/mock-gstn/events/supplier-cancelled")
+def supplier_cancelled(ev: SupplierCancelled):
+    """Demo trigger: the officer cancels a supplier's registration from a past date."""
+    STATE.cancelled[ev.ctin] = ev.effective_from
+    return {"ctin": ev.ctin, "effective_from": ev.effective_from, "note": "Cancellation recorded (simulated)"}
+
+
+@app.get("/mock-gstn/suppliers/{ctin}")
+def supplier_status(ctin: str):
+    """Registration status, as a GSP taxpayer search would show it."""
+    eff = STATE.cancelled.get(ctin)
+    return {"_simulated": BANNER, "ctin": ctin, "status": "Cancelled" if eff else "Active", "effective_from": eff}
 
 
 @app.get("/mock-gstn/ims")

@@ -19,6 +19,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from gstagent import gstin
+from gstagent.language import STATE_LANGUAGE
 
 PERIOD = "102026"
 BUYER_STATE = "29"
@@ -68,6 +69,11 @@ def _j(x):
     raise TypeError(type(x))
 
 
+# Suppliers choose their own language; many traders don't use their state's main one.
+LANGUAGE_CHOICE = {"Bharath Electricals": "hi-IN", "Tumkur Steel Works": "te-IN", "Udupi Logistics": "en-IN",
+                   "Sri Ganesh Traders": "ta-IN", "Mysore Agro Supplies": "hi-IN"}
+
+
 def generate(seed: int = 7) -> dict:
     rng = random.Random(seed)
 
@@ -95,7 +101,7 @@ def generate(seed: int = 7) -> dict:
             "state_code": state,
             "default_rate": rate,
             "phone": f"+91 90000 000{n:02d}",
-            "language": "kn-IN" if state == "29" else ("ta-IN" if state == "33" else "en-IN"),
+            "language": LANGUAGE_CHOICE.get(name) or STATE_LANGUAGE.get(state, "en-IN"),
         })
     by_name = {s["name"]: s for s in suppliers}
 

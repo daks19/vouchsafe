@@ -31,7 +31,7 @@ class TaxpayerProfile(BaseModel):
     holder_type: str  # from PAN 4th char: individual, huf, firm, llp, company, ...
     prior_year_turnover: Decimal
     income_kind: Literal["business", "profession"] = "business"
-    preferred_language: str = "kn-IN"
+    preferred_language: str = "en-IN"   # language code, see gstagent.language
     accountant_name: str | None = None
 
 
@@ -40,7 +40,7 @@ class Supplier(BaseModel):
     name: str
     state_code: str
     phone: str | None = None
-    language: str = "kn-IN"
+    language: str = "en-IN"
 
 
 class DocType(StrEnum):

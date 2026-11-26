@@ -5,7 +5,7 @@
     "state_code": "29",
     "default_rate": 18,
     "phone": "+91 90000 00001",
-    "language": "kn-IN"
+    "language": "ta-IN"
   },
   {
     "gstin": "29GBCFM8104N1ZQ",
@@ -13,7 +13,7 @@
     "state_code": "29",
     "default_rate": 5,
     "phone": "+91 90000 00002",
-    "language": "kn-IN"
+    "language": "hi-IN"
   },
   {
     "gstin": "29CHCFC7955B1Z0",
@@ -61,7 +61,7 @@
     "state_code": "29",
     "default_rate": 18,
     "phone": "+91 90000 00008",
-    "language": "kn-IN"
+    "language": "te-IN"
   },
   {
     "gstin": "29DRWFH2028S1ZC",
@@ -77,7 +77,7 @@
     "state_code": "29",
     "default_rate": 18,
     "phone": "+91 90000 00010",
-    "language": "kn-IN"
+    "language": "hi-IN"
   },
   {
     "gstin": "33RNYCC6146O1ZN",
@@ -93,7 +93,7 @@
     "state_code": "27",
     "default_rate": 18,
     "phone": "+91 90000 00012",
-    "language": "en-IN"
+    "language": "mr-IN"
   },
   {
     "gstin": "32ZFWFK4999C1ZU",
@@ -101,7 +101,7 @@
     "state_code": "32",
     "default_rate": 5,
     "phone": "+91 90000 00013",
-    "language": "en-IN"
+    "language": "ml-IN"
   },
   {
     "gstin": "29SJQPM9111K1Z3",
@@ -117,6 +117,6 @@
     "state_code": "29",
     "default_rate": 18,
     "phone": "+91 90000 00015",
-    "language": "kn-IN"
+    "language": "en-IN"
   }
 ]

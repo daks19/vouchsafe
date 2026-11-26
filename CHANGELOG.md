@@ -5,6 +5,25 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- Agent loop (`src/gstagent/agent/`, LangGraph + SQLite checkpointer): one case per mismatch, three workflows.
+  - W1 confirm the delivery: ask the receiver, read the reply (Claude, `reply.py`), then ask for the bill,
+    mark Pending in IMS, or hand to the CA. Asks at most twice.
+  - W2 supplier correction: message the supplier, wait for GSTR-1A, re-check the portal; close when it matches
+    (with the `itc.gstr1a_flow` note on which GSTR-2B gets the credit) or hand to the CA after three checks with
+    the Section 16(4) dates.
+  - W3 keep purchase evidence: on a backdated cancellation, list exposed bills with supplier snapshots and the
+    `itc.evidence_pack` status, and hand the pack to the CA.
+  - Every outward action waits for the owner's approval, bound to a hash of the exact text; every draft passes
+    the number guard; an append-only audit log per case.
+  - `python -m gstagent.agent.demo` runs all three end to end; 14 agent tests (each workflow twice in a row).
+- Multilingual (`language.py`): 11 languages. Messages go out in each recipient's language (shop's from the
+  profile, each supplier's own), with the English beside it for the owner; the approval hash covers both; a
+  translation that changes a figure is not used. Replies are understood in any Indian language or script.
+  GSTINs and PANs are masked before any text reaches Claude. Demo: `--lang`, a reply in every language.
+- `llm.py`: the single Claude call (JSON schema, server-side fallback), used by bill extraction and reply reading.
+- `snapshots.py`: timestamped, hashed record of what GSTR-2B showed about a bill's supplier.
+- Mock portal: `POST /mock-gstn/events/supplier-cancelled` and `GET /mock-gstn/suppliers/{ctin}`.
+- Dependencies: `langgraph`, `langgraph-checkpoint-sqlite`, `httpx` (runtime).
 - P0 bill pipeline: a bill photo turns into a CA-queue exception with issue, reason, cited rule and recommended action.
   - `extract.py`: Claude vision (`claude-opus-5-5`) reads a bill into fixed fields, each with a confidence score.
     Unclear fields come back null. Only the image is sent; the prompt has no GSTIN or PAN.
@@ -22,6 +41,8 @@ All notable changes to this project. Newest first. Dates are when the work lande
 - `docs/SPEC.md`: the product spec, moved into the repo so the whole team works from one copy.
 
 ### Changed
+- No more Kannada-only defaults: model defaults are `en-IN`; synthetic suppliers now use Hindi, Tamil, Telugu,
+  Marathi, Malayalam, English and Kannada; supplier messages no longer open with a Kannada greeting.
 - README "Next steps" now points to PLAN.md instead of keeping its own list.
 
 ### Known limits

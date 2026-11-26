@@ -130,7 +130,7 @@ Three sources: **gst-agent** (built: this repo), **IPO SHERPA** (the team's earl
 |---|---|---|
 | 29 Nov | P0 pipeline | A bill photo → Claude fields → validators → matcher → an exception in the CA queue with reason and cited rule (synthetic data) |
 | 3 Dec | Agent + three workflows | LangGraph loop runs W1, W2 and W3 end to end on the mock portal, twice in a row, with approval pauses |
-| 7 Dec | Real channels | WhatsApp question and Sarvam voice reply (Kannada first) on a low-cost Android |
+| 7 Dec | Real channels | WhatsApp question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages (list in `src/gstagent/language.py`) on a low-cost Android |
 | 10 Dec | CA dashboard + accuracy | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills |
 | 12 Dec | Hardening | Demo script rehearsed; video recorded; README states what is simulated and what was reused |
 | 13 Dec | Prototype submitted | |

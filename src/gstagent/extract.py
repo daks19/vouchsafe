@@ -13,10 +13,9 @@ import json
 from pathlib import Path
 from typing import Callable
 
-import anthropic
 from pydantic import BaseModel
 
-MODEL = "claude-opus-5-5"
+from gstagent.llm import LLMError, NoCredentials, ask_json  # noqa: F401  (NoCredentials re-exported)
 
 FIELDS = {
     "supplier_name": "seller's trade name as printed",
@@ -79,41 +78,17 @@ class BillRead(BaseModel):
     total: Read
 
 
-class ExtractionError(Exception):
-    pass
-
-
-class NoCredentials(ExtractionError):
+class ExtractionError(LLMError):
     pass
 
 
 def call_claude(image: bytes, media_type: str) -> str:
-    """One Claude vision call; returns the JSON text. Key from ANTHROPIC_API_KEY (or an `ant` profile)."""
-    client = anthropic.Anthropic()
-    try:
-        msg = _create(client, image, media_type)
-    except TypeError as e:  # the SDK raises TypeError when it finds no key
-        if "authentication" not in str(e):
-            raise
-        raise NoCredentials("no Claude credentials: export ANTHROPIC_API_KEY, or use --replay") from e
-    if msg.stop_reason != "end_turn":
-        raise ExtractionError(f"Claude stopped with {msg.stop_reason}; ask for the bill again")
-    return next(b.text for b in msg.content if b.type == "text")
-
-
-def _create(client: anthropic.Anthropic, image: bytes, media_type: str):
-    return client.beta.messages.create(
-        model=MODEL,
-        max_tokens=16000,  # adaptive thinking is always on and counts against this
-        betas=["server-side-fallback-2026-07-01"],
-        fallbacks="default",
-        output_config={"effort": "medium", "format": {"type": "json_schema", "schema": SCHEMA}},
-        messages=[{"role": "user", "content": [
-            {"type": "image", "source": {"type": "base64", "media_type": media_type,
-                                         "data": base64.standard_b64encode(image).decode()}},
-            {"type": "text", "text": PROMPT},
-        ]}],
-    )
+    """One Claude vision call; returns the JSON text."""
+    return ask_json([
+        {"type": "image", "source": {"type": "base64", "media_type": media_type,
+                                     "data": base64.standard_b64encode(image).decode()}},
+        {"type": "text", "text": PROMPT},
+    ], SCHEMA)
 
 
 MEDIA_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}

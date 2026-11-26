@@ -16,7 +16,7 @@ the right person about each mismatch and keeps evidence. It prepares. A human ap
 
 ```bash
 uv sync
-uv run pytest -q                       # must stay green; currently 163 tests
+uv run pytest -q                       # must stay green; currently 195 tests
 uv run python -m gstagent.demo         # reconciliation on the synthetic trader
 uv run python -m gstagent.ca_queue tests/fixtures/bills/nandi_missing_in_2b.png \
     --replay tests/fixtures/bills/nandi_missing_in_2b.reply.json   # bill photo -> CA queue, offline
@@ -34,6 +34,9 @@ Python 3.12, managed with `uv`. Add packages with `uv add` (runtime) or `uv add 
    Every outward action (message, IMS action, hand-off) waits for human approval.
 5. **Label every simulation.** Mock endpoints send `X-Simulated: true` and a `_simulated` banner.
 6. **Money is `Decimal`**, never float. Dates are `date`, never strings, inside models.
+7. **Every language, not one.** Vouchsafe serves traders across India. Anything a person reads or hears goes
+   out in that person's language (`language.py`); never hard-code or default to one regional language. Demos and
+   tests show several. The Mysuru shop is only demo data.
 
 ## How the code is laid out
 
@@ -42,6 +45,9 @@ Python 3.12, managed with `uv`. Add packages with `uv add` (runtime) or `uv add 
   To change a rule, add a new version with its own window, citations and examples. Never edit an old card's
   facts. `pytest` runs every card's examples.
 - Pipeline: `extract.py` (Claude vision) → `validate.py` → `matcher.py` + rule cards → `ca_queue.py`.
+- Agent: `agent/graph.py` (LangGraph). One thread per case. Every outward action is drafted, passes the number
+  guard, then waits at the `approve` node; an approval counts only with the hash of the exact text shown.
+  All Claude calls go through `llm.py`.
 - Tests must run offline. Mock every Claude, Sarvam or WhatsApp call with a recorded reply in `tests/fixtures/`.
 - Claude model: `claude-opus-5-5`, key from `ANTHROPIC_API_KEY`. Don't change the model without the team's say.
 
