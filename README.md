@@ -8,18 +8,33 @@ An agent that runs a micro business's GST close, from the bills in its WhatsApp 
 It chases the suppliers whose filings put the owner's input credit at risk, explains to the owner in
 his own language what is about to be filed in his name, and **stops at the line where a professional files**.
 
-> **Status: scaffold.** Deterministic core, rule cards, synthetic data and a simulated GST portal.
-> No agent loop, LLM, WhatsApp or voice yet. See *Next steps*.
+> **Status: P0 pipeline.** A bill photo goes through Claude vision (`extract.py`), Python validators
+> (`validate.py`) and the matcher + rule cards, and lands in a CA exception queue (`ca_queue.py`) with
+> issue, reason, cited rule and recommended action. Synthetic data and a simulated GST portal.
+> No agent loop, WhatsApp or voice yet. See [PLAN.md](PLAN.md).
+
+Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.md](AGENTS.md) · Changes: [CHANGELOG.md](CHANGELOG.md)
 
 ## Quick start
 
 ```bash
 uv sync
-uv run pytest -q                                    # 137 tests: rule-card examples, matcher scenarios, guard, mock portal
+uv run pytest -q                                    # 163 tests: rule-card examples, matcher, guard, mock portal, bill pipeline
 uv run python -m gstagent.demo                      # reconciliation + rule checks on the synthetic trader
 uv run python -m gstagent.synth.generate            # regenerate data/synthetic (deterministic, --seed 7)
 uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; docs at /docs
+
+# Bill photo -> CA-queue exception. --replay uses a saved Claude reply (offline, no key needed).
+uv run python -m gstagent.ca_queue tests/fixtures/bills/nandi_missing_in_2b.png \
+    --replay tests/fixtures/bills/nandi_missing_in_2b.reply.json
+# Live: export ANTHROPIC_API_KEY=... and drop --replay (add --save-reply out.json to keep the reply)
+uv run uvicorn gstagent.ca_queue:app --port 8200        # POST raw image bytes to /ca-queue/bills; GET /ca-queue
+uv run python -m gstagent.synth.bill_images             # re-render the fixture bill photos (dev group: Pillow)
 ```
+
+Fixture bills (`tests/fixtures/bills/`): `nandi_missing_in_2b` (supplier hasn't reported it → ITC at risk),
+`chamundi_matches_2b` (matches the 2B-only record → nothing to review), `kaveri_wrong_split` (IGST inside one
+state → re-snap). Their `.reply.json` files are hand-made in Claude's reply schema, not live recordings yet.
 
 ## Layout
 
@@ -28,6 +43,9 @@ uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; 
 | `src/gstagent/models.py` | Case schema: the single source of truth (profile, bills, portal records, matches, tasks, approvals, timeline). Money is `Decimal`. |
 | `src/gstagent/gstin.py` | GSTIN structure + Luhn mod-36 checksum. OCR 'Z' repair only when the checksum then passes; never rewrites valid `D`/`C` (TDS/TCS) GSTINs. |
 | `src/gstagent/rules/` | Effective-dated **rule cards** (`cards/<id>@<version>.yaml`) plus their logic (`logic.py`). |
+| `src/gstagent/extract.py` | Claude vision reads a bill photo into fixed fields, each with a confidence; unclear = null. Only the image is sent; the prompt has no GSTIN/PAN. |
+| `src/gstagent/validate.py` | Checks on what Claude read: required fields + confidence, GSTIN check digit, CGST/SGST vs IGST split (`gst.tax_split`), arithmetic. A failure is a "resnap" task. |
+| `src/gstagent/ca_queue.py` | Photo → extract → validate → matcher + rule cards → CA queue rows. CLI and FastAPI app. |
 | `src/gstagent/matcher.py` | Bills vs GSTR-2B in 4 tiers (exact, normalised, fuzzy, anchored), with a plain reason on every row. |
 | `src/gstagent/guard.py` | Number guard: blocks any message containing a figure the case did not compute. |
 | `src/gstagent/mock_gstn/` | **Simulated** GST portal: GSTR-2B (GSP-documented JSON shape), IMS view/save, "supplier files GSTR-1A" trigger. |
@@ -50,6 +68,7 @@ uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; 
 |---|---|---|
 | `gst.filing_calendar` | 1 | Monthly 11th/20th; QRMP IFF 13th, PMT-06 25th, 3B 22nd/24th; composition CMP-08 18th |
 | `ims.treatment` | 1 (Oct 2024), 2 (Oct 2025) | No action = deemed accepted at GSTR-2B generation; Pending is never deemed accepted later (stays until acted on or 16(4)); credit notes may be Pending from Oct-2025 period; BoE accept/pending only; reverse-charge records are outside IMS |
+| `gst.tax_split` | 1 | Same state → CGST + SGST in equal halves; different states → IGST only (IGST Act s.5, 7, 8; CGST Act s.9). SEZ/imports not detected, so a mismatch is a review |
 | `gst.rate_check` | 1 (to 21 Sep 2025), 2 (from 22 Sep 2025) | Judged on the invoice's own date; never auto-reject |
 | `itc.time_limit_16_4` | 1 | 30 November after the financial year, or the annual return date if earlier (pass `annual_return_filed_on`). With `filing_scheme`, also the last GSTR-3B that can carry the claim: October's for monthly filers (due 20 Nov), the Jul–Sep quarter's for QRMP filers (due 22/24 Oct) |
 | `itc.gstr1a_flow` | 1 (*verify*) | A GSTR-1A record shows in IMS once saved; its ITC lands in the next GSTR-2B generated after filing (usually the next period's), Rule 60(7)(iia) |
@@ -116,10 +135,6 @@ The hackathon requires original work. Ideas we borrowed are listed here; all cod
 - **JanAI Café / Asha**: no public API; any integration must be shown as a labelled mock.
 - **Filing**: never. Simulated hand-off only.
 
-## Next steps (from the build plan)
+## Next steps
 
-1. Agent loop with case store and approval interrupts: plan → act → wait for event → recover → approve.
-2. Supplier chase journey end to end (draft → owner approves → send → wait for GSTR-1A → re-match → close or escalate).
-3. Vision-LLM bill extraction with schema + validators; real bill photos (with consent) for evaluation.
-4. Owner's vernacular "what is being filed in your name" summary, through `guard.check()`.
-5. CA cockpit: triage, Tally XML export (educational mode: vouchers dated 1st, 2nd or 31st only), hash-bound approval.
+The build plan, who owns what, and the latest progress are in [PLAN.md](PLAN.md). Kept there only, so it can't drift.

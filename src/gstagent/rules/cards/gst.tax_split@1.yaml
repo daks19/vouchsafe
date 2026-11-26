@@ -1,0 +1,26 @@
+id: gst.tax_split
+version: 1
+title: Intra-State supply carries CGST + SGST in equal halves; inter-State supply carries IGST
+effective_from: 2017-07-01
+selects_on: the invoice date
+params: {tolerance: "1.00"}
+citations:
+  - "IGST Act 2017 s.7(1): supplier's location and place of supply in different States = inter-State supply"
+  - "IGST Act 2017 s.8(1): supplier's location and place of supply in the same State = intra-State supply"
+  - "IGST Act 2017 s.5(1): IGST is levied on inter-State supplies"
+  - "CGST Act 2017 s.9(1) with the State GST Act: CGST and SGST (UTGST in a UT) are levied on intra-State supplies"
+notes: >-
+  Supplier's state is the first two digits of the supplier GSTIN; place of supply is the state code printed on the
+  bill (for goods delivered to the buyer, usually the buyer's state). SEZ supplies and imports are inter-State even
+  inside one state (IGST Act s.7(2), 7(5)); this card does not detect them, so a mismatch is a review, never a reject.
+examples:
+  - {name: intra-state with halves, as_of: 2026-10-14, inputs: {supplier_state: "29", place_of_supply: "29", igst: "0", cgst: "900", sgst: "900"},
+     expect: {kind: intra, ok: true}}
+  - {name: inter-state with igst, as_of: 2026-10-14, inputs: {supplier_state: "33", place_of_supply: "29", igst: "1800", cgst: "0", sgst: "0"},
+     expect: {kind: inter, ok: true}}
+  - {name: igst charged inside one state, as_of: 2026-10-14, inputs: {supplier_state: "29", place_of_supply: "29", igst: "1440", cgst: "0", sgst: "0"},
+     expect: {kind: intra, ok: false}}
+  - {name: cgst charged across states, as_of: 2026-10-14, inputs: {supplier_state: "33", place_of_supply: "29", igst: "0", cgst: "900", sgst: "900"},
+     expect: {kind: inter, ok: false}}
+  - {name: unequal halves, as_of: 2026-10-14, inputs: {supplier_state: "29", place_of_supply: "29", igst: "0", cgst: "900", sgst: "90"},
+     expect: {kind: intra, ok: false}}

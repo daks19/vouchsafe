@@ -1,0 +1,58 @@
+{
+  "supplier_name": {
+    "value": "Chamundi Packaging",
+    "confidence": 0.91
+  },
+  "supplier_gstin": {
+    "value": "29CHCFC7955B1Z0",
+    "confidence": 0.93
+  },
+  "buyer_gstin": {
+    "value": "29KEMPR1791C1ZW",
+    "confidence": 0.94
+  },
+  "doc_type": {
+    "value": "INV",
+    "confidence": 0.98
+  },
+  "invoice_no": {
+    "value": "CP/7781",
+    "confidence": 0.92
+  },
+  "invoice_date": {
+    "value": "2026-10-01",
+    "confidence": 0.89
+  },
+  "place_of_supply": {
+    "value": "29",
+    "confidence": 0.94
+  },
+  "hsn": {
+    "value": "4819, 3919",
+    "confidence": 0.92
+  },
+  "taxable_value": {
+    "value": "62000.00",
+    "confidence": 0.89
+  },
+  "rate": {
+    "value": "18",
+    "confidence": 0.9
+  },
+  "igst": {
+    "value": "0.00",
+    "confidence": 0.99
+  },
+  "cgst": {
+    "value": "5580.00",
+    "confidence": 0.95
+  },
+  "sgst": {
+    "value": "5580.00",
+    "confidence": 0.96
+  },
+  "total": {
+    "value": "73160.00",
+    "confidence": 0.96
+  }
+}

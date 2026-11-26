@@ -211,6 +211,22 @@ def itc_time_limit(card: RuleCard, i: dict) -> tuple[dict, str]:
     return out, msg
 
 
+@rule("gst.tax_split")
+def tax_split(card: RuleCard, i: dict) -> tuple[dict, str]:
+    tol = D(card.params["tolerance"])
+    igst, cgst, sgst = D(i["igst"]), D(i["cgst"]), D(i["sgst"])
+    sup, pos = str(i["supplier_state"]), str(i["place_of_supply"])
+    if sup == pos:
+        ok = igst == 0 and abs(cgst - sgst) <= tol
+        why = (f"Supplier and place of supply are both in state {sup}: intra-State, so CGST and SGST in equal halves"
+               + ("." if ok else f", but the bill shows IGST {rupees(igst)}, CGST {rupees(cgst)}, SGST {rupees(sgst)}."))
+        return {"kind": "intra", "ok": ok}, why
+    ok = cgst == 0 and sgst == 0
+    why = (f"Supplier in state {sup}, place of supply {pos}: inter-State, so IGST only"
+           + ("." if ok else f", but the bill shows CGST {rupees(cgst)} and SGST {rupees(sgst)}."))
+    return {"kind": "inter", "ok": ok}, why
+
+
 @rule("itc.supplier_reported")
 def itc_supplier_reported(card: RuleCard, i: dict) -> tuple[dict, str]:
     tax = D(i["tax"])
