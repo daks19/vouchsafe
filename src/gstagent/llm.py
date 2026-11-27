@@ -42,7 +42,7 @@ class Busy(LLMError):
     """Rate limit, overload or timeout: worth trying another model or again later."""
 
 
-def _load_dotenv(path: Path = Path(".env")) -> None:
+def load_dotenv(path: Path = Path(".env")) -> None:
     """KEY=VALUE lines from a git-ignored .env; the shell environment wins."""
     if path.is_file():
         for line in path.read_text().splitlines():
@@ -53,7 +53,7 @@ def _load_dotenv(path: Path = Path(".env")) -> None:
 
 
 def provider() -> str:
-    _load_dotenv()
+    load_dotenv()
     p = os.environ.get("LLM_PROVIDER", "gemini").strip().lower()
     if p not in PROVIDERS:
         raise LLMError(f"LLM_PROVIDER={p!r}; use one of {', '.join(PROVIDERS)}")

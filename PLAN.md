@@ -10,7 +10,7 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 |---|---|---|---|---|
 | 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Done; fixtures are live Gemini recordings (27 Nov) | Dakshan |
 | 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built, merged (PR #1); live run passed in Hindi, Tamil, Telugu (26 Nov) | Dakshan |
-| 7 Dec | **Real channels** | WhatsApp question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android | Not started |  |
+| 7 Dec | **Real channels** | WhatsApp question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android | Adapters built, offline-tested (27 Nov); not run live yet | Dakshan |
 | 10 Dec | **CA dashboard + accuracy** | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills | Not started |  |
 | 12 Dec | **Hardening** | Demo script rehearsed, video recorded, README says what is simulated and what was reused | Not started |  |
 | 13 Dec | **Prototype submitted** | | |  |
@@ -70,6 +70,16 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
+
+### 2026-11-27 (afternoon) · Dakshan (with Claude)
+- Branch `dakshan/channels`: `channels/whatsapp.py` (Cloud API v27.0: text, voice note, signed webhook, media
+  download), `channels/voice.py` (Sarvam `bulbul:v3` TTS as Ogg/Opus, `saaras:v4` STT), `Agent(deliver=...)`,
+  and `channels/live.py` (W1 on real WhatsApp, owner approves in the terminal). Every message goes only to
+  `WHATSAPP_DEMO_TO`. 10 offline tests, 221 in total.
+- **Not verified:** nothing has run live (no Meta app, Sarvam key or tunnel yet). Unsure: whether Sarvam's
+  `opus` output plays as a WhatsApp voice note (needs Ogg/Opus); if not, switch to mp3 (plays as plain audio).
+- **Next:** make a Meta developer app (test number, add your phone), a Sarvam key, install `cloudflared`, then
+  run `python -m gstagent.channels.live --lang hi-IN` and reply by voice. Costs: WhatsApp ₹0, Sarvam about ₹0–150.
 
 ### 2026-11-27 (late morning) · Dakshan (with Claude)
 - Branch `dakshan/live-fixtures`: the 3 bill fixtures are now live Gemini recordings (all read right, ~5.5 s

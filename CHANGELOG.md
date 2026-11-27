@@ -5,6 +5,14 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- WhatsApp and voice channels (`src/gstagent/channels/`), not run live yet:
+  - `whatsapp.py`: WhatsApp Cloud API test number; sends text and voice notes, receives replies on a webhook
+    that checks Meta's signature, downloads voice notes. Prototype sends only to `WHATSAPP_DEMO_TO`.
+  - `voice.py`: Sarvam text-to-speech (`bulbul:v3`, Ogg/Opus) and speech-to-text (`saaras:v4`; the spec named
+    v3, which Sarvam now calls legacy). 11 languages.
+  - `Agent(deliver=...)` sends each approved message on a real channel; W1 questions also go as a voice note.
+  - `python -m gstagent.channels.live`: W1 end to end on WhatsApp, the owner approving in the terminal.
+  - Settings in `.env.example`. 10 offline tests.
 - Cross-provider fallback: when Gemini is busy or out of free quota, `llm.py` tries Groq (and the other way
   round), if that provider's key is in `.env` too. 2 offline tests. Live check (27 Nov, Groq): 1 of 3 bills
   read fully right (one date read backwards, one bill's amounts unreadable and sent for a re-snap), so Groq stays
