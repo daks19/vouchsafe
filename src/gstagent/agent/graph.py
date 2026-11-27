@@ -430,12 +430,22 @@ class Agent:
             raise ValueError(why)
         return self.answer(case_id, ans)
 
+    def retry(self, case_id: str) -> dict:
+        """Run the step that failed again (e.g. the LLM was busy while reading a reply)."""
+        self.graph.invoke(None, self._cfg(case_id))
+        return self.view(case_id)
+
+    def stuck(self, case_id: str) -> bool:
+        """A step failed: the case neither waits nor has ended."""
+        st = self.graph.get_state(self._cfg(case_id))
+        return bool(st.next) and not st.interrupts
+
     def view(self, case_id: str) -> dict:
         st = self.graph.get_state(self._cfg(case_id))
         v = st.values
         return {"case_id": case_id, "workflow": v.get("workflow"),
                 "waiting": st.interrupts[0].value if st.interrupts else None,
-                "outcome": v.get("outcome"), "timeline": v.get("timeline", []), "outbox": v.get("outbox", []),
+                "outcome": v.get("outcome"), "facts": v.get("facts", {}), "timeline": v.get("timeline", []), "outbox": v.get("outbox", []),
                 "snapshots": v.get("snapshots", [])}
 
     def close(self) -> None:
