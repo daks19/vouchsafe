@@ -16,7 +16,7 @@ the right person about each mismatch and keeps evidence. It prepares. A human ap
 
 ```bash
 uv sync
-uv run pytest -q                       # must stay green; currently 221 tests
+uv run pytest -q                       # must stay green; currently 227 tests
 uv run python -m gstagent.demo         # reconciliation on the synthetic trader
 uv run python -m gstagent.ca_queue tests/fixtures/bills/nandi_missing_in_2b.png \
     --replay tests/fixtures/bills/nandi_missing_in_2b.reply.json   # bill photo -> CA queue, offline
@@ -48,8 +48,9 @@ Python 3.12, managed with `uv`. Add packages with `uv add` (runtime) or `uv add 
 - Agent: `agent/graph.py` (LangGraph). One thread per case. Every outward action is drafted, passes the number
   guard, then waits at the `approve` node; an approval counts only with the hash of the exact text shown.
   All LLM calls go through `llm.py`.
-- Channels: `channels/whatsapp.py` and `channels/voice.py` (Sarvam). The agent sends through `Agent(deliver=...)`;
-  without it the channel is simulated. In the prototype every real message goes to `WHATSAPP_DEMO_TO` only.
+- Channels: `channels/telegram.py` (live demo), `channels/whatsapp.py` (needs Meta business verification) and
+  `channels/voice.py` (Sarvam). The agent sends through `Agent(deliver=...)`; without it the channel is simulated.
+  In the prototype every real message goes to the one demo chat only (`TELEGRAM_DEMO_CHAT` / `WHATSAPP_DEMO_TO`).
 - Tests must run offline. Mock every LLM, Sarvam or WhatsApp call with a recorded reply in `tests/fixtures/`.
 - LLM: `LLM_PROVIDER` in `.env` picks `gemini` (default, free tier), `groq` (free tier) or `claude` (paid).
   If Gemini is busy, Groq is tried when its key is set too (and the other way round). Default models are in `llm.py`; `LLM_MODEL` overrides one. See `.env.example`. Don't change the defaults

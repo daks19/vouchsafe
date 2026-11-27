@@ -1,4 +1,4 @@
-"""WhatsApp and Sarvam adapters, the webhook, and the agent sending through a channel. Offline: httpx is faked."""
+"""Telegram, WhatsApp and Sarvam adapters, the webhook, and the agent sending through a channel. Offline: httpx is faked."""
 
 import base64
 import hashlib
@@ -13,12 +13,13 @@ from fastapi.testclient import TestClient
 from gstagent import data
 from gstagent.agent import cases, demo
 from gstagent.agent.graph import Agent
-from gstagent.channels import live, voice, whatsapp
+from gstagent.channels import live, telegram, voice, whatsapp
 from gstagent.matcher import reconcile
 from gstagent.mock_gstn.app import app as mock_app
 
 ENV = {"SARVAM_API_KEY": "s-key", "WHATSAPP_TOKEN": "w-tok", "WHATSAPP_PHONE_ID": "111",
-       "WHATSAPP_DEMO_TO": "919800000001", "WHATSAPP_VERIFY_TOKEN": "vt", "WHATSAPP_APP_SECRET": "secret"}
+       "WHATSAPP_DEMO_TO": "919800000001", "WHATSAPP_VERIFY_TOKEN": "vt", "WHATSAPP_APP_SECRET": "secret",
+       "TELEGRAM_BOT_TOKEN": "123:tg-secret", "TELEGRAM_DEMO_CHAT": "4242"}
 
 
 @pytest.fixture
@@ -149,12 +150,81 @@ def test_live_voice_failure_still_sends_the_text(env):
     calls = []
     env.setattr(whatsapp, "send_text", lambda t: calls.append(("text", t)))
     env.setattr(voice, "speak", lambda t, lang: (_ for _ in ()).throw(voice.VoiceError("credit used up")))
-    how = live.deliver({"text": "Did it arrive?", "lang": "hi-IN", "voice": True})
-    assert calls == [("text", "Did it arrive?")] and "voice note failed" in how
+    how = live.deliver({"text": "Did it arrive?", "lang": "hi-IN", "voice": True}, whatsapp)
+    assert calls == [("text", "Did it arrive?")] and how.startswith("WhatsApp") and "voice note failed" in how
 
 
 def test_live_turns_a_voice_reply_into_text(env):
     env.setattr(whatsapp, "download", lambda mid: (b"OGG", "audio/ogg"))
     env.setattr(voice, "transcribe", lambda audio, mime: ("नहीं, ऑर्डर नहीं दिया", "hi-IN"))
-    assert live.heard({"type": "audio", "media_id": "m1", "mime": "audio/ogg"}) == "नहीं, ऑर्डर नहीं दिया"
+    assert live.heard({"type": "audio", "media_id": "m1", "mime": "audio/ogg"}, whatsapp) == "नहीं, ऑर्डर नहीं दिया"
     assert live.heard({"type": "text", "text": "never ordered"}) == "never ordered"
+
+
+TG = "https://api.telegram.org/bot123:tg-secret"
+
+
+def test_telegram_sends_only_to_the_demo_chat_and_hides_the_token(env):
+    sent = fake(env, [(200, {"ok": True, "result": {"message_id": 1}}),
+                      (200, {"ok": True, "result": {"message_id": 2}}),
+                      (401, {"ok": False, "description": "Unauthorized"})])
+    assert telegram.send_text("hello") == 1 and telegram.send_voice(b"OGG") == 2
+    text, voice_note = sent[:2]
+    assert text["url"] == f"{TG}/sendMessage" and text["json"] == {"chat_id": "4242", "text": "hello"}
+    assert voice_note["url"] == f"{TG}/sendVoice" and voice_note["data"] == {"chat_id": "4242"}
+    assert voice_note["files"]["voice"] == ("message.ogg", b"OGG", "audio/ogg")
+    with pytest.raises(telegram.TelegramError, match="Unauthorized") as e:
+        telegram.send_text("x")
+    assert "tg-secret" not in str(e.value)
+
+
+def test_telegram_network_error_does_not_leak_the_token(env):
+    def boom(url, **kw):
+        raise httpx.ConnectError(f"cannot reach {url}")
+    env.setattr(httpx, "post", boom)
+    with pytest.raises(telegram.TelegramError) as e:
+        telegram.send_text("x")
+    assert "tg-secret" not in str(e.value)
+
+
+def update(uid, chat, **msg):
+    return {"update_id": uid, "message": {"message_id": uid, "chat": {"id": chat}, **msg}}
+
+
+def test_telegram_updates_give_text_and_voice_and_skip_the_rest():
+    ups = [update(1, 4242, text="never ordered"),
+           update(2, 4242, voice={"file_id": "f1", "mime_type": "audio/ogg", "duration": 2}),
+           update(3, 4242, photo=[{"file_id": "p"}]), {"update_id": 4, "edited_message": {}}]
+    assert telegram.messages(ups) == [
+        {"from": "4242", "id": "1", "type": "text", "text": "never ordered"},
+        {"from": "4242", "id": "2", "type": "audio", "media_id": "f1", "mime": "audio/ogg"}]
+
+
+def test_telegram_download_follows_the_file_path(env):
+    sent = fake(env, [(200, {"ok": True, "result": {"file_path": "voice/file_9.oga"}}), (200, b"OGG")])
+    assert telegram.download("f1") == (b"OGG", "audio/ogg")
+    assert sent[1]["url"] == "https://api.telegram.org/file/bot123:tg-secret/voice/file_9.oga"
+
+
+def test_telegram_poll_skips_old_messages_and_other_chats(env):
+    class Done(Exception):
+        pass
+    sent = fake(env, [(200, {"ok": True, "result": [update(5, 4242, text="old hi")]}),
+                      (200, {"ok": True, "result": [update(6, 999, text="stranger"), update(7, 4242, text="arrived")]})])
+    got = []
+
+    def on_message(m):
+        got.append(m)
+        raise Done
+    with pytest.raises(Done):
+        telegram.poll(on_message)
+    assert sent[1]["json"]["offset"] == 6 and [m["text"] for m in got] == ["arrived"]
+
+
+def test_live_deliver_on_telegram_sends_text_then_voice(env):
+    calls = []
+    env.setattr(telegram, "send_text", lambda t: calls.append("text"))
+    env.setattr(telegram, "send_voice", lambda a: calls.append(("voice", a)))
+    env.setattr(voice, "speak", lambda t, lang: b"OGG")
+    assert live.deliver({"text": "Aaya?", "lang": "hi-IN", "voice": True}) == "Telegram text and voice note to the demo chat"
+    assert calls == ["text", ("voice", b"OGG")]

@@ -58,7 +58,7 @@ GSTR-2B + IMS (GSP; mock now) ┼─► 1 Collect ─► 2 Claude vision reads b
 
 Step by step:
 
-1. **Collect** (WhatsApp Cloud API): bill photos, PDFs and voice notes to the business number. GSTR-2B and IMS come through a GSP in production, the mock portal in the prototype.
+1. **Collect** (WhatsApp Cloud API in production; a Telegram bot in the prototype, because Meta needs a verified business first): bill photos, PDFs and voice notes to the business number. GSTR-2B and IMS come through a GSP in production, the mock portal in the prototype.
 2. **Read the bill** (Claude vision): photo → fixed JSON fields (supplier, GSTIN, invoice no., date, taxable value, tax, total, HSN) with a confidence per field. Unclear fields stay blank, never guessed.
 3. **Check the fields** (Python validators): GSTIN check digit (built), state-code vs CGST/SGST or IGST split, arithmetic, duplicate photo (image hash, built). A failed check asks for a clearer photo. Tesseract is the offline backup for GSTIN and totals only.
 4. **Match and apply rules** (built): 4-tier matcher against GSTR-2B and IMS; rule cards work out credit at risk and each deadline.
@@ -91,7 +91,7 @@ Three sources: **gst-agent** (built: this repo), **IPO SHERPA** (the team's earl
 | Frontend shell and UI kit | IPO SHERPA | `App.jsx`, `Dashboard.jsx`, `AuditTrail.jsx`, `ui/*` | Dashboard → CA client list; score meter → period readiness |
 | CA exception queue | IPO SHERPA, adapted | `BankerDashboard.jsx` | Rows: issue, reason, cited rule, recommended action, Approve / Ask again |
 | **Agent loop** | **New** | `agent/` (LangGraph) | The heart of "Agentic AI" |
-| **WhatsApp channel + voice** | **New** | `channels/whatsapp.py`, `channels/voice.py` | WhatsApp Cloud API test number; Sarvam STT/TTS behind one adapter |
+| **Messaging channel + voice** | **New** | `channels/telegram.py`, `channels/whatsapp.py`, `channels/voice.py` | Telegram bot for the prototype; WhatsApp Cloud API once the business is verified; Sarvam STT/TTS behind one adapter |
 | **Supplier snapshots** | **New** | `snapshots.py` | Status and filing data per bill, with timestamp and hash, from what GSTR-2B shows (GSP search in production, mocked) |
 | **Shop screens** | **New** | `Shop.jsx` (phone-sized) | Fallback for WhatsApp: "Did this arrive?" and the read-back |
 
@@ -108,7 +108,7 @@ Three sources: **gst-agent** (built: this repo), **IPO SHERPA** (the team's earl
 | LLM and vision | Claude (Anthropic API) |
 | Agent loop | LangGraph, SQLite checkpointer, `interrupt()` approvals |
 | Voice | Sarvam speech-to-text (`saaras:v3`) and text-to-speech |
-| Channel | WhatsApp Cloud API (test number, 5 recipients) |
+| Channel | Prototype: Telegram bot. Production: WhatsApp Cloud API (needs Meta business verification) |
 | Offline backup | Tesseract (GSTIN and totals only) |
 | Frontend | React 19 + Vite + Tailwind 4 (from IPO SHERPA) |
 | Government systems | Mock GST portal, every response labelled SIMULATED |
@@ -172,7 +172,7 @@ Accountant pays a flat workspace fee (₹499 a month for up to 25 clients, ₹99
 | LLM invents a number | Number guard on every outgoing message |
 | Claude misreads a bill | Validators + confidence; low confidence asks for a re-snap or read-back |
 | API costs and quotas | Claude and Sarvam keys with low limits; Sarvam free credit is only ₹100; check Lyzr credits |
-| WhatsApp API delays | Cloud API test number; fall back to the in-app phone screen |
+| WhatsApp locked until business verification | Telegram bot for the prototype; in-app phone screen as the last fallback |
 | Rule mistakes in front of a CA juror | Rule cards cited and tested; cards marked `verify_before_finale` checked against primary text |
 
 ## 13. Credits line for the README
