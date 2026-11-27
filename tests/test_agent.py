@@ -244,3 +244,14 @@ def test_translation_in_the_wrong_script_is_refused(monkeypatch):
 
 def test_every_demo_reply_is_in_its_own_script():
     assert all(language.in_script(r, lang) for lang, r in demo.REPLIES.items() if lang in language.SCRIPTS)
+
+
+def test_supplier_message_names_only_the_field_that_differs(portal):
+    books = data.load_books()
+    recs = data.portal_records_from_2b(data.load_json("gstr2b_102026.json"))
+    todo = cases.from_matches(reconcile(books, recs, demo.RULES, cases.period_start("102026")), books, recs, "102026")
+    c = next(c for c in todo if c["workflow"] == "W2")
+    c["facts"].update(problem="amount_mismatch", filed_taxable=c["facts"]["taxable"], filed_date="2026-01-10",
+                      lang="en-IN")
+    text = agent(portal).open(c)["waiting"]["text"]
+    assert "the date as 10-01-2026" in text and "taxable value" not in text

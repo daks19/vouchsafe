@@ -79,3 +79,15 @@ def test_reverse_charge_line_never_suggests_ims_pending():
     assert m.status == MatchStatus.MISSING_IN_BOOKS
     assert "not in IMS" in m.reason and "recommend IMS Pending" not in m.reason
     assert m.citations
+
+
+def test_mismatch_reason_names_only_the_field_that_differs(results):
+    """Live Groq read 1 Oct as 10 Jan; the reason must say 'date', not '₹62,000 vs ₹62,000'."""
+    m = next(m for m in results if m.tier == "exact")
+    b = next(b for b in data.load_books() if b.id == m.book_id)
+    p = next(p for p in data.portal_records_from_2b(data.load_json("gstr2b_102026.json"))
+             if p.inum == b.invoice_no)
+    late = b.model_copy(update={"invoice_date": date(2026, 1, 10)})
+    [r] = [r for r in reconcile([late], [p], RULES, date(2026, 10, 1)) if r.book_id]
+    assert r.status == MatchStatus.AMOUNT_MISMATCH
+    assert "date" in r.reason and "taxable value" not in r.reason

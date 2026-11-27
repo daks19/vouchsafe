@@ -27,7 +27,7 @@ from gstagent import data, guard, gstin, language, snapshots
 from gstagent.agent import reply as reply_mod
 from gstagent.agent.cases import period_start
 from gstagent.llm import LLMError
-from gstagent.matcher import norm_inv, reconcile
+from gstagent.matcher import AMOUNT_TOLERANCE, norm_inv, reconcile
 from gstagent.models import BookEntry, MatchStatus
 from gstagent.rules import RuleBook
 from gstagent.rules.logic import rupees
@@ -203,8 +203,13 @@ def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date
         head = (f"Hello. This is {PROFILE.trade_name} (GSTIN {PROFILE.gstin}). Your invoice {f['invoice_no']} "
                 f"dated {_dd(f['invoice_date'])}")
         if f["problem"] == MatchStatus.AMOUNT_MISMATCH.value:
-            text = (f"{head}: you filed taxable value {rupees(Decimal(f['filed_taxable']))}, but the bill says "
-                    f"{rupees(Decimal(f['taxable']))}. Please correct it through GSTR-1A.")
+            diffs = []  # name only what differs
+            if abs(Decimal(f["filed_taxable"]) - Decimal(f["taxable"])) > AMOUNT_TOLERANCE:
+                diffs.append(f"taxable value {rupees(Decimal(f['filed_taxable']))}, but the bill says "
+                             f"{rupees(Decimal(f['taxable']))}")
+            if f.get("filed_date", f["invoice_date"]) != f["invoice_date"]:
+                diffs.append(f"the date as {_dd(f['filed_date'])}, but the bill says {_dd(f['invoice_date'])}")
+            text = f"{head}: you filed {' and '.join(diffs)}. Please correct it through GSTR-1A."
         else:
             text = (f"{head} (taxable {rupees(Decimal(f['taxable']))}, GST {rupees(Decimal(f['tax']))}) is not in our "
                     "GSTR-2B. Please report it in your GSTR-1/IFF, or in GSTR-1A if that return is already filed.")

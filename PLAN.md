@@ -76,7 +76,9 @@ left, and what the next person should do first. Keep each entry to a few lines; 
   instead of 1 Oct (a false mismatch); Kaveri's amounts came back as junk, so the validator asked for a re-snap.
   Nothing unsafe got through, but Groq reads bills worse than Gemini (3/3): keep Gemini first, Groq as backup.
 - **Not verified:** Groq on text (replies, translation).
-- **Next:** the "₹62,000 but the bill says ₹62,000" reason text should name the field that differs (here the date).
+- Branch `dakshan/mismatch-reason`: the CA-queue reason and the supplier message now name only the field that
+  differs (taxable value, date or both), so a date-only mismatch no longer reads "₹62,000 but the bill says
+  ₹62,000". 211 tests pass.
 
 ### 2026-11-26 (night) · Dakshan (with Claude)
 - Branch `dakshan/groq-fallback`: a busy or rate-limited Gemini now falls back to Groq when `GROQ_API_KEY` is
