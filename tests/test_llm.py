@@ -57,6 +57,24 @@ def test_gemini_falls_back_to_the_next_free_model_when_busy(env):
     assert llm.ask_json([TEXT], SCHEMA) == "{}" and sent == list(llm.GEMINI_MODELS[:2])
 
 
+def test_slow_text_reply_hands_over_to_the_next_model_but_photos_get_time(env):
+    env.setenv("GEMINI_API_KEY", "g")
+    seen = []
+
+    def post(url, headers, json, timeout):
+        seen.append((json["model"], timeout))
+        if len(seen) == 1:
+            raise httpx.ReadTimeout("slow")
+        return httpx.Response(200, request=httpx.Request("POST", url), json={"status": "completed", "steps": [
+            {"type": "model_output", "content": [{"type": "text", "text": "{}"}]}]})
+    env.setattr(llm.httpx, "post", post)
+    assert llm.ask_json([TEXT], SCHEMA) == "{}"
+    assert seen == [(llm.GEMINI_MODELS[0], llm.TEXT_TIMEOUT), (llm.GEMINI_MODELS[1], llm.TEXT_TIMEOUT)]
+    seen.clear()
+    llm.ask_json([IMAGE, TEXT], SCHEMA)
+    assert seen[-1][1] == llm.TIMEOUT
+
+
 def test_groq_picks_the_vision_model_only_for_images(env):
     env.setenv("LLM_PROVIDER", "groq")
     env.setenv("GROQ_API_KEY", "q-key")

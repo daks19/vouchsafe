@@ -34,6 +34,10 @@ All notable changes to this project. Newest first. Dates are when the work lande
   (`gemini-3.8-flash` → `gemini-3.6-flash` → `gemini-3.5-flash-lite`).
 
 ### Fixed
+- Drafting a message could take a minute when Gemini was busy: the backup model answered slowly while the
+  lightest one answers in about a second. Short text requests (translating a message, reading a reply) now give
+  each model 6 seconds before moving to the next; bill photos still get 120. Live (27 Nov, busy Gemini): a
+  Hindi or Tamil translation took 18–32 s on the backup model, now about 7.5 s. 1 test.
 - A bill whose date differs from the supplier's filing (same amount) no longer reads "₹62,000 but the bill
   says ₹62,000": the CA-queue reason and the supplier message name only what differs. 2 tests.
 - A translation in the wrong script is refused (live, a Tamil message came back in Kannada script; Hindi came
