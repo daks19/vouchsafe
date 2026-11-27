@@ -51,6 +51,18 @@ def _differences(b: BookEntry, p: PortalRecord) -> str:
     return "; ".join(diffs) or "no differences"
 
 
+def _mismatch(b: BookEntry, p: PortalRecord) -> str:
+    """Only the fields that actually differ, so the reason never reads '₹62,000 vs ₹62,000'."""
+    filed, bill = [], []
+    if not _close(b.taxable_value, p.txval):
+        filed.append(f"taxable value {rupees(p.txval)}")
+        bill.append(rupees(b.taxable_value))
+    if b.invoice_date != p.dt:
+        filed.append(f"date {p.dt}")
+        bill.append(str(b.invoice_date))
+    return f"Supplier filed {' and '.join(filed)} but the bill says {' and '.join(bill)}"
+
+
 def reconcile(books: list[BookEntry], portal: list[PortalRecord], rules: RuleBook,
               period_start: date) -> list[Match]:
     results: list[Match] = []
@@ -132,7 +144,7 @@ def reconcile(books: list[BookEntry], portal: list[PortalRecord], rules: RuleBoo
             risk = max(b.tax - p.tax, Decimal("0")) if b.doc_type == DocType.INVOICE else Decimal("0")
             results.append(Match(
                 book_id=b.id, portal_key=key(p), status=MatchStatus.AMOUNT_MISMATCH, itc_at_risk=risk,
-                reason=(f"Supplier filed taxable value {rupees(p.txval)} but the bill says {rupees(b.taxable_value)}; "
+                reason=(f"{_mismatch(b, p)}; "
                         f"{rupees(risk)} of ITC at risk until the supplier amends via GSTR-1A."),
                 citations=rules.get("itc.supplier_reported", period_start).citations))
 

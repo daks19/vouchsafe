@@ -18,6 +18,8 @@ All notable changes to this project. Newest first. Dates are when the work lande
   (`gemini-3.8-flash` → `gemini-3.6-flash` → `gemini-3.5-flash-lite`).
 
 ### Fixed
+- A bill whose date differs from the supplier's filing (same amount) no longer reads "₹62,000 but the bill
+  says ₹62,000": the CA-queue reason and the supplier message name only what differs. 2 tests.
 - A translation in the wrong script is refused (live, a Tamil message came back in Kannada script; Hindi came
   back in Latin letters). The prompt asks for the native script; `language.in_script()` checks it; a refused
   translation goes out in English with a note, as before.

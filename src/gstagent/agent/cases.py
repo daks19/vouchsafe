@@ -42,6 +42,7 @@ def from_matches(matches: list[Match], books: list[BookEntry], portal: list[Port
                      "lang": sup.get("language") or STATE_LANGUAGE.get(g.gstin[:2], "en-IN")}
             if m.status == MatchStatus.AMOUNT_MISMATCH:
                 facts["filed_taxable"] = str(by_key[m.portal_key].txval)
+                facts["filed_date"] = by_key[m.portal_key].dt.isoformat()
             cases.append({"case_id": f"W2:{b.id}", "workflow": "W2", "facts": facts,
                           "bill": b.model_dump(mode="json")})
     return cases
