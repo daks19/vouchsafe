@@ -28,7 +28,6 @@ from gstagent import data, language
 from gstagent.agent import demo, reply
 from gstagent.agent.graph import RULES, Agent
 from gstagent.channels import live, telegram
-from gstagent.llm import LLMError
 from gstagent.mock_gstn.app import app as mock_app
 
 log = logging.getLogger("gstagent.dashboard")
@@ -98,24 +97,40 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
 
     def run(fn: Callable[[], dict]) -> dict:
         try:
-            return fn()
-        except LLMError as e:  # the step can be run again with /retry
+            out = fn()
+        except live.ERRORS as e:  # LLM, Telegram or Sarvam failed: the step can be run again with /retry
             s["last_error"] = str(e)
-            raise HTTPException(502, f"The AI service failed: {e}. Press 'Try again'.") from None
+            raise HTTPException(502, f"A service failed: {e}. Press 'Try again'.") from None
+        s["last_error"] = None
+        return out
+
+    def reply_case() -> str | None:
+        return next((c for c in s["cases"] if (s["agent"].view(c)["waiting"] or {}).get("type") == "reply"), None)
 
     def on_message(m: dict) -> None:
         """A Telegram message: the reply to the one case waiting for one. Anything else is logged and ignored."""
         with lock:
-            cid = next((c for c in s["cases"] if (s["agent"].view(c)["waiting"] or {}).get("type") == "reply"), None)
-            if cid is None:
-                log.info("Telegram message with no case waiting for a reply: ignored")
+            cid = reply_case()
+        if cid is None:
+            log.info("Telegram message with no case waiting for a reply: ignored")
+            return
+        try:  # download + speech-to-text outside the lock, so the page keeps refreshing meanwhile
+            text = live.heard(m)
+        except Exception as e:  # noqa: BLE001 - whatever it is, the listener thread must survive
+            log.exception("reading a Telegram reply failed")
+            s["last_error"] = f"Reply to {cid} not read: {e}"
+            return
+        with lock:
+            if reply_case() != cid:  # reset, or answered from the page, while we listened
+                log.info("case %s no longer waits for a reply: ignored", cid)
                 return
             try:
-                text = live.heard(m)
                 if m["type"] == "audio":
                     s["voice"].setdefault(cid, []).append(text)
                 s["agent"].answer(cid, text)
-            except live.ERRORS as e:
+                s["last_error"] = None
+            except Exception as e:  # noqa: BLE001 - e.g. the LLM is busy; the page offers "Try again"
+                log.exception("answering %s failed", cid)
                 s["last_error"] = f"Reply to {cid} not read: {e}"
 
     @asynccontextmanager

@@ -183,3 +183,52 @@ def test_llm_busy_while_reading_a_reply_can_be_retried():
     busy["on"] = False
     assert c.post(f"/api/cases/{W1}/retry").json()["waiting"]["action"] == "ca_handoff"
     assert c.post(f"/api/cases/{W1}/retry").status_code == 409  # nothing failed now
+
+
+def test_any_failure_reading_a_telegram_reply_keeps_the_listener_alive(client, monkeypatch):
+    def boom(m, ch=None):
+        raise RuntimeError("unexpected")
+    monkeypatch.setattr(live, "heard", boom)
+    approve(client, W1)
+    client.app.state.on_message({"from": "4242", "id": "5", "type": "audio", "media_id": "f3", "mime": "audio/ogg"})
+    assert statuses(client)[W1] == "waiting_reply"
+    assert "unexpected" in client.get("/api/cases").json()["last_error"]
+
+
+def test_the_page_stays_responsive_while_a_voice_note_is_transcribed(client, monkeypatch):
+    import threading
+
+    def slow_heard(m, ch=None):  # the page polls while Sarvam is working; it must not wait for the lock
+        assert client.get("/api/cases").status_code == 200
+        return TAMIL
+    monkeypatch.setattr(live, "heard", slow_heard)
+    approve(client, W1)
+    t = threading.Thread(target=client.app.state.on_message,
+                         args=({"from": "4242", "id": "6", "type": "audio", "media_id": "f4", "mime": "audio/ogg"},))
+    t.start()
+    t.join(timeout=10)
+    assert not t.is_alive() and case(client, W1)["voice_replies"] == [TAMIL]
+
+
+def test_an_old_error_clears_once_a_reply_gets_through(client, monkeypatch):
+    def broken(m, ch=None):  # the voice note fails; the typed reply after it gets through
+        if m["type"] == "audio":
+            raise voice.VoiceError("Sarvam HTTP 503")
+        return m["text"]
+    monkeypatch.setattr(live, "heard", broken)
+    approve(client, W1)
+    client.app.state.on_message({"from": "4242", "id": "7", "type": "audio", "media_id": "f5", "mime": "audio/ogg"})
+    client.app.state.on_message({"from": "4242", "id": "8", "type": "text", "text": TAMIL})
+    assert client.get("/api/cases").json()["last_error"] is None
+
+
+def test_a_channel_failure_is_a_plain_502_not_a_crash():
+    from gstagent.channels import telegram
+
+    def classify(q, r):
+        raise telegram.TelegramError("Telegram sendMessage: ConnectError")
+    TestClient(mock_app).post("/mock-gstn/reset")
+    c = TestClient(dashboard.make_app(classify=classify), raise_server_exceptions=False)
+    approve(c, W1)
+    r = c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL})
+    assert r.status_code == 502 and "Telegram" in r.json()["detail"] and statuses(c)[W1] == "needs_retry"

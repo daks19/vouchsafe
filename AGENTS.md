@@ -16,7 +16,7 @@ the right person about each mismatch and keeps evidence. It prepares. A human ap
 
 ```bash
 uv sync
-uv run pytest -q                       # must stay green; currently 256 tests
+uv run pytest -q                       # must stay green; currently 262 tests
 uv run python -m gstagent.demo         # reconciliation on the synthetic trader
 uv run python -m gstagent.ca_queue tests/fixtures/bills/nandi_missing_in_2b.png \
     --replay tests/fixtures/bills/nandi_missing_in_2b.reply.json   # bill photo -> CA queue, offline

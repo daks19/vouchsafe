@@ -11,7 +11,7 @@ All notable changes to this project. Newest first. Dates are when the work lande
   decision, replies (tagged when from a voice note), W3 proof and the audit trail. Clicks carry the hash of the
   text shown: a stale page or a double click gets "changed" (409) and sends nothing. With `--channel telegram`
   only the shop's messages go out, to the demo chat; supplier messages stay simulated. A failed AI step can be
-  retried from the page. Demo controls: a day passes, type a reply, reset. 16 offline tests.
+  retried from the page; a failed voice note or network error never stops the Telegram listener, and the page keeps refreshing while a voice note is transcribed. Demo controls: a day passes, type a reply, reset. 20 offline tests.
 - CA decision step in the agent: after every hand-off the case waits for the CA (`Agent.decide`). Options come
   from the actual IMS record: Accept / Keep Pending / Reject (as the `ims.treatment` card allows) when the record
   exists, otherwise Wait for the supplier / Follow up again; Close always needs a reason; W3 offers Collect the
