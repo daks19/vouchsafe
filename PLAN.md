@@ -61,7 +61,8 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 - Arithmetic check assumes one GST rate per bill.
 - CA-queue API keeps its state in memory.
 - Demo persona is "Ramesh, hardware trader", but the synthetic trade name is "Sri Lakshmi Agro Traders". Pick one before the video.
-- If Gemini's free model reads bills badly, try `LLM_PROVIDER=groq` or `claude` (paid) on the same 3 fixtures.
+- Groq reads bills worse than Gemini (1 of 3 fully right on 27 Nov); it is only the backup. `claude` (paid) is
+  untested live.
 - Lyzr AI credits: terms unknown. Keep LangGraph unless the hackathon requires Lyzr.
 - Cards marked `verify_before_finale: true` need checking against primary text (CBIC/GSTN) before 27 Dec.
 
@@ -69,6 +70,13 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
+
+### 2026-11-27 · Dakshan (with Claude)
+- Live Groq check (`qwen/qwen3.8-27b`, 4–6.5 s per bill): Nandi read right; Chamundi's date read as 10 Jan
+  instead of 1 Oct (a false mismatch); Kaveri's amounts came back as junk, so the validator asked for a re-snap.
+  Nothing unsafe got through, but Groq reads bills worse than Gemini (3/3): keep Gemini first, Groq as backup.
+- **Not verified:** Groq on text (replies, translation).
+- **Next:** the "₹62,000 but the bill says ₹62,000" reason text should name the field that differs (here the date).
 
 ### 2026-11-26 (night) · Dakshan (with Claude)
 - Branch `dakshan/groq-fallback`: a busy or rate-limited Gemini now falls back to Groq when `GROQ_API_KEY` is
