@@ -5,6 +5,14 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- Telegram bot channel (`channels/telegram.py`), now the default for the live demo because Meta locks a new
+  WhatsApp account until the business is verified (error 131031). Sends text and voice notes, reads typed or
+  voice replies by long polling (no public address needed), only to and from `TELEGRAM_DEMO_CHAT`; the bot token
+  never appears in errors. `python -m gstagent.channels.live` takes `--channel telegram|whatsapp` (default
+  telegram). `python -m gstagent.channels.telegram` prints your chat id. 6 offline tests. Live check (27 Nov,
+  Tamil): W1 ran end to end; the Tamil voice reply was transcribed word for word and read as never ordered.
+- Live check (27 Nov, Sarvam): text-to-speech returns Ogg/Opus (plays as a voice note); speech-to-text read the
+  Hindi clip back word for word.
 - WhatsApp and voice channels (`src/gstagent/channels/`), not run live yet:
   - `whatsapp.py`: WhatsApp Cloud API test number; sends text and voice notes, receives replies on a webhook
     that checks Meta's signature, downloads voice notes. Prototype sends only to `WHATSAPP_DEMO_TO`.

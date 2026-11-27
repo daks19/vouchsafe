@@ -12,7 +12,7 @@ his own language what is about to be filed in his name, and **stops at the line 
 > (`extract.py`), Python validators (`validate.py`) and the matcher + rule cards into a CA exception queue
 > (`ca_queue.py`). A LangGraph agent (`agent/`) runs the three workflows on each mismatch, pausing for the
 > owner's approval before every outward action. Synthetic data, simulated GST portal and message channel.
-> WhatsApp and Sarvam voice adapters are built (`channels/`) but not yet run live. See [PLAN.md](PLAN.md).
+> Sarvam voice is tested live; the live demo channel is a Telegram bot (WhatsApp needs a verified business). See [PLAN.md](PLAN.md).
 
 Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.md](AGENTS.md) · Changes: [CHANGELOG.md](CHANGELOG.md)
 
@@ -20,7 +20,7 @@ Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.
 
 ```bash
 uv sync
-uv run pytest -q                                    # 221 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages, channels
+uv run pytest -q                                    # 227 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages, channels
 uv run python -m gstagent.demo                      # reconciliation + rule checks on the synthetic trader
 uv run python -m gstagent.synth.generate            # regenerate data/synthetic (deterministic, --seed 7)
 uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; docs at /docs
@@ -36,8 +36,8 @@ uv run python -m gstagent.synth.bill_images             # re-render the fixture 
 uv run python -m gstagent.agent.demo --lang hi-IN       # shop speaks Hindi; any of the 11 codes in language.py
 # add --live so the LLM translates each message into the recipient's language and reads the reply
 
-# W1 on real WhatsApp + Sarvam voice (keys in .env; see src/gstagent/channels/whatsapp.py and live.py)
-uv run python -m gstagent.channels.live --lang ta-IN
+# W1 on a real Telegram bot + Sarvam voice (keys in .env; see src/gstagent/channels/telegram.py and live.py)
+uv run python -m gstagent.channels.live --lang ta-IN          # --channel whatsapp once Meta verifies the business
 ```
 
 Fixture bills (`tests/fixtures/bills/`): `nandi_missing_in_2b` (supplier hasn't reported it → ITC at risk),
@@ -55,7 +55,7 @@ state → re-snap). Their `.reply.json` files are live Gemini recordings (27 Nov
 | `src/gstagent/validate.py` | Checks on what Claude read: required fields + confidence, GSTIN check digit, CGST/SGST vs IGST split (`gst.tax_split`), arithmetic. A failure is a "resnap" task. |
 | `src/gstagent/ca_queue.py` | Photo → extract → validate → matcher + rule cards → CA queue rows. CLI and FastAPI app. |
 | `src/gstagent/agent/` | LangGraph agent: one thread per case (`cases.py`), W1/W2/W3 graph with hash-bound approval pauses and an append-only audit log (`graph.py`), Claude reading the shop's reply (`reply.py`), scripted demo (`demo.py`). SQLite checkpointer keeps cases across restarts. |
-| `src/gstagent/channels/` | WhatsApp Cloud API (`whatsapp.py`: send text and voice notes, signed webhook) and Sarvam voice (`voice.py`: text-to-speech, speech-to-text). Prototype sends only to one demo phone. `live.py` runs W1 on them. |
+| `src/gstagent/channels/` | Telegram bot (`telegram.py`: the live demo channel), WhatsApp Cloud API (`whatsapp.py`: signed webhook; needs Meta business verification) and Sarvam voice (`voice.py`: text-to-speech, speech-to-text). Prototype sends only to one demo chat. `live.py` runs W1 on them. |
 | `src/gstagent/language.py` | Supported languages (Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Odia, Punjabi, English), GSTIN/PAN masking, translation. Each message goes out in the recipient's language. |
 | `src/gstagent/llm.py` | The one place that calls an LLM, always for schema-checked JSON. `LLM_PROVIDER` picks Gemini (default, free), Groq (free) or Claude (paid); a busy Gemini falls back to Groq. |
 | `src/gstagent/snapshots.py` | What GSTR-2B showed about a bill's supplier, timestamped and hashed (W3 evidence). |
@@ -144,8 +144,9 @@ The hackathon requires original work. Ideas we borrowed are listed here; all cod
 - **GST portal**: simulated (`mock_gstn`). Real GSTN/GSP access is not available to student teams.
 - **E-way bill portal, e-invoice IRP**: not yet; mock with NIC field names next.
 - **Messages to the shop and suppliers**: simulated; the agent records them in each case's outbox.
-- **WhatsApp**: not yet; Meta Cloud API test number (5 recipients, templates needed for supplier chasers).
-- **Voice**: not yet; Sarvam STT/TTS behind an adapter.
+- **WhatsApp**: adapter built (`channels/whatsapp.py`), but Meta locks a new account until the business is verified,
+  so the prototype uses a Telegram bot.
+- **Voice**: Sarvam STT/TTS (`channels/voice.py`), tested live.
 - **JanAI Café / Asha**: no public API; any integration must be shown as a labelled mock.
 - **Filing**: never. Simulated hand-off only.
 

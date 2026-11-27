@@ -10,7 +10,7 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 |---|---|---|---|---|
 | 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Done; fixtures are live Gemini recordings (27 Nov) | Dakshan |
 | 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built, merged (PR #1); live run passed in Hindi, Tamil, Telugu (26 Nov) | Dakshan |
-| 7 Dec | **Real channels** | WhatsApp question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android | Adapters built, offline-tested (27 Nov); not run live yet | Dakshan |
+| 7 Dec | **Real channels** | Question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android, through a Telegram bot (WhatsApp is locked, see Known gaps) | Live W1 on Telegram worked end to end in Tamil (27 Nov); other languages not run live yet | Dakshan |
 | 10 Dec | **CA dashboard + accuracy** | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills | Not started |  |
 | 12 Dec | **Hardening** | Demo script rehearsed, video recorded, README says what is simulated and what was reused | Not started |  |
 | 13 Dec | **Prototype submitted** | | |  |
@@ -47,8 +47,8 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 ## Later milestones, in short
 
-- **7 Dec:** `channels/whatsapp.py` (Cloud API test number, 5 recipients, templates for supplier messages) and
-  `channels/voice.py` (Sarvam `saaras:v3` speech-to-text, plus text-to-speech, behind one adapter).
+- **7 Dec:** `channels/telegram.py` (bot: text, voice note, answer buttons; no tunnel needed) and
+  `channels/voice.py` (Sarvam speech-to-text and text-to-speech). `channels/whatsapp.py` stays for production.
 - **10 Dec:** CA dashboard from the IPO SHERPA UI kit (client list, exception queue, readiness meter, audit trail,
   hash-bound approval); phone-sized `Shop.jsx` fallback; owner's "what is being filed in your name" read-back in
   their language, through `guard.check()`; accuracy run on consented real bills. Tally XML export if time allows
@@ -57,6 +57,11 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 ## Known gaps and open questions
 
+- **WhatsApp is locked.** Meta flagged the new account `BUSINESS_VERIFICATION_NEEDED` (27 Nov); every send fails
+  with 131031. Verifying needs a registered business's documents (GST certificate, incorporation, bank statement)
+  and 2–10 days. The live demo uses a Telegram bot instead; on stage: "the channel is a plug-in, production runs on
+  a verified WhatsApp number". `channels/whatsapp.py` is kept. Twilio's WhatsApp sandbox was the other option
+  (100 free messages, rejoin every 3 days, Twilio's sender name).
 - Image duplicate check is an exact-bytes hash; switch to a perceptual hash once real photos come in.
 - Arithmetic check assumes one GST rate per bill.
 - CA-queue API keeps its state in memory.
@@ -70,6 +75,18 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
+
+### 2026-11-27 (evening) · Dakshan (with Claude)
+- Meta WhatsApp is locked until business verification (see Known gaps); inbound works, outbound fails (131031).
+- Sarvam tested live: TTS returns Ogg/Opus (WhatsApp/Telegram voice-note format); STT read the Hindi clip back word for word.
+- Decision: Telegram bot for the live demo (free, no expiry, real voice notes, no tunnel). Branch
+  `dakshan/telegram`: `channels/telegram.py`, `live.py --channel telegram|whatsapp` (default telegram). 227 tests.
+- **Live run (Tamil):** question went out as text plus voice note; the Tamil voice reply was transcribed word for
+  word, read as `never_ordered`, and the case was handed to the CA. Drafting once took ~1 min (Hindi run; Gemini busy).
+- **Not verified:** other languages live; answer buttons not built (replies are typed or spoken).
+- **Next:** find why drafting can take a minute (too slow on stage); run the live W1 in a few more languages.
+  Setup for a new machine: bot from @BotFather → `TELEGRAM_BOT_TOKEN`, send /start,
+  `python -m gstagent.channels.telegram` → `TELEGRAM_DEMO_CHAT`, then `python -m gstagent.channels.live --lang ta-IN`.
 
 ### 2026-11-27 (afternoon) · Dakshan (with Claude)
 - Branch `dakshan/channels`: `channels/whatsapp.py` (Cloud API v27.0: text, voice note, signed webhook, media
