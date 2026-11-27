@@ -5,6 +5,10 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- Cross-provider fallback: when Gemini is busy or out of free quota, `llm.py` tries Groq (and the other way
+  round), if that provider's key is in `.env` too. 2 offline tests. Live check (27 Nov, Groq): 1 of 3 bills
+  read fully right (one date read backwards, one bill's amounts unreadable and sent for a re-snap), so Groq stays
+  the backup.
 - LLM provider switch in `llm.py`: `LLM_PROVIDER=gemini` (default, free tier; `gemini-3.8-flash`, falling back to `gemini-3.6-flash` when busy), `groq`
   (free tier; `qwen/qwen3.8-27b` for bill photos, `openai/gpt-oss-120b` for text) or `claude` (paid). Keys and
   `LLM_MODEL` come from the shell or a git-ignored `.env` (`.env.example` shows them). 10 offline tests.
