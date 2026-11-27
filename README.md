@@ -8,10 +8,11 @@ An agent that runs a micro business's GST close, from the bills in its WhatsApp 
 It chases the suppliers whose filings put the owner's input credit at risk, explains to the owner in
 his own language what is about to be filed in his name, and **stops at the line where a professional files**.
 
-> **Status: P0 pipeline done; agent loop built.** A bill photo goes through an LLM's vision (Gemini by default)
+> **Status: P0 pipeline done; agent loop and CA dashboard built.** A bill photo goes through an LLM's vision (Gemini by default)
 > (`extract.py`), Python validators (`validate.py`) and the matcher + rule cards into a CA exception queue
 > (`ca_queue.py`). A LangGraph agent (`agent/`) runs the three workflows on each mismatch, pausing for the
-> owner's approval before every outward action. Synthetic data, simulated GST portal and message channel.
+> owner's approval before every outward action; every hand-off waits for the CA's decision on a dashboard
+> (`dashboard.py` + `frontend/`). Synthetic data, simulated GST portal and message channel.
 > Sarvam voice is tested live; the live demo channel is a Telegram bot (WhatsApp needs a verified business). See [PLAN.md](PLAN.md).
 
 Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.md](AGENTS.md) · Changes: [CHANGELOG.md](CHANGELOG.md)
@@ -20,7 +21,7 @@ Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.
 
 ```bash
 uv sync
-uv run pytest -q                                    # 227 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages, channels
+uv run pytest -q                                    # 256 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages, channels, dashboard
 uv run python -m gstagent.demo                      # reconciliation + rule checks on the synthetic trader
 uv run python -m gstagent.synth.generate            # regenerate data/synthetic (deterministic, --seed 7)
 uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; docs at /docs
@@ -38,6 +39,11 @@ uv run python -m gstagent.agent.demo --lang hi-IN       # shop speaks Hindi; any
 
 # W1 on a real Telegram bot + Sarvam voice (keys in .env; see src/gstagent/channels/telegram.py and live.py)
 uv run python -m gstagent.channels.live --lang ta-IN          # --channel whatsapp once Meta verifies the business
+
+# CA dashboard: one page over the live agent. Build the page once (Node 20+), then open http://localhost:8000
+(cd frontend && npm install && npm run build)
+uv run python -m gstagent.dashboard                             # rehearsal: offline, no keys, simulated channel
+uv run python -m gstagent.dashboard --lang ta-IN --channel telegram   # W1 to the Telegram demo chat (live LLM + voice)
 ```
 
 Fixture bills (`tests/fixtures/bills/`): `nandi_missing_in_2b` (supplier hasn't reported it → ITC at risk),
@@ -55,6 +61,8 @@ state → re-snap). Their `.reply.json` files are live Gemini recordings (27 Nov
 | `src/gstagent/validate.py` | Checks on what Claude read: required fields + confidence, GSTIN check digit, CGST/SGST vs IGST split (`gst.tax_split`), arithmetic. A failure is a "resnap" task. |
 | `src/gstagent/ca_queue.py` | Photo → extract → validate → matcher + rule cards → CA queue rows. CLI and FastAPI app. |
 | `src/gstagent/agent/` | LangGraph agent: one thread per case (`cases.py`), W1/W2/W3 graph with hash-bound approval pauses and an append-only audit log (`graph.py`), Claude reading the shop's reply (`reply.py`), scripted demo (`demo.py`). SQLite checkpointer keeps cases across restarts. |
+| `src/gstagent/dashboard.py` | CA workspace API: lists cases with status and readiness, owner approvals and CA decisions (hash-bound), typed or Telegram replies, demo controls; serves `frontend/dist`. |
+| `frontend/` | React 19 + Vite + Tailwind 4 page: client list, readiness meter, exception queue, case detail with approvals, CA decision, replies, proof and audit trail. Polls every 2 s. |
 | `src/gstagent/channels/` | Telegram bot (`telegram.py`: the live demo channel), WhatsApp Cloud API (`whatsapp.py`: signed webhook; needs Meta business verification) and Sarvam voice (`voice.py`: text-to-speech, speech-to-text). Prototype sends only to one demo chat. `live.py` runs W1 on them. |
 | `src/gstagent/language.py` | Supported languages (Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Odia, Punjabi, English), GSTIN/PAN masking, translation. Each message goes out in the recipient's language. |
 | `src/gstagent/llm.py` | The one place that calls an LLM, always for schema-checked JSON. `LLM_PROVIDER` picks Gemini (default, free), Groq (free) or Claude (paid); a busy Gemini falls back to Groq. |
@@ -129,11 +137,13 @@ All names, GSTINs (checksum-valid), phone numbers and amounts are fictional.
 
 ## Pattern ledger (provenance)
 
-The hackathon requires original work. Ideas we borrowed are listed here; all code in this repo is our own.
+The hackathon requires original work. Ideas we borrowed are listed here. All code in this repo is our own; the
+dashboard's small UI parts are adapted from IPO SHERPA, built by members of this team (credited in each file).
 
 | Idea | Seen in | How we implemented it |
 |---|---|---|
 | Schema as single source of truth; deterministic checks with citation and fix steps; seeded demo data; "professional signs off" gate | IPO SHERPA (cjagadheesh/Automated-IPO-Drafter, SEBI TechSprint 2026) | `models.py`, rule cards with citations, `synth/`, approval model |
+| Dashboard UI kit (card, badge, stat tile, theme), readiness arc, audit-trail layout | IPO SHERPA (same team) | `frontend/src/components/ui/`, `Readiness.jsx`, `Timeline.jsx`, `index.css`; SEBI/ICDR wording removed |
 | Tiered reconciliation with a reason per row | KedarDamale/Automated-Reconcillation | `matcher.py` (4 tiers, stdlib only) |
 | Degrade gracefully when services fail | DoAideAi/GSTBot | Planned for the agent loop |
 | GSTIN position-14 OCR repair | TrustBill AI (IJERT, May 2026) | `gstin.py`, but only when the checksum passes and never for D/C GSTINs |
@@ -143,7 +153,9 @@ The hackathon requires original work. Ideas we borrowed are listed here; all cod
 
 - **GST portal**: simulated (`mock_gstn`). Real GSTN/GSP access is not available to student teams.
 - **E-way bill portal, e-invoice IRP**: not yet; mock with NIC field names next.
-- **Messages to the shop and suppliers**: simulated; the agent records them in each case's outbox.
+- **Messages to the shop and suppliers**: simulated; the agent records them in each case's outbox. On the
+  dashboard with `--channel telegram`, only the shop's (W1) messages go out for real, to the demo chat.
+- **IMS actions** (Accept / Pending / Reject): saved on the mock portal only, on the CA's click.
 - **WhatsApp**: adapter built (`channels/whatsapp.py`), but Meta locks a new account until the business is verified,
   so the prototype uses a Telegram bot.
 - **Voice**: Sarvam STT/TTS (`channels/voice.py`), tested live.

@@ -11,7 +11,7 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 | 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Done; fixtures are live Gemini recordings (27 Nov) | Dakshan |
 | 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built, merged (PR #1); live run passed in Hindi, Tamil, Telugu (26 Nov) | Dakshan |
 | 7 Dec | **Real channels** | Question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android, through a Telegram bot (WhatsApp is locked, see Known gaps) | Live W1 on Telegram worked end to end in Tamil (27 Nov); other languages not run live yet | Dakshan |
-| 10 Dec | **CA dashboard + accuracy** | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills | Not started |  |
+| 10 Dec | **CA dashboard + accuracy** | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills | Dashboard built (28 Nov, offline-checked; live Telegram rehearsal pending). Accuracy not started | Dakshan |
 | 12 Dec | **Hardening** | Demo script rehearsed, video recorded, README says what is simulated and what was reused | Not started |  |
 | 13 Dec | **Prototype submitted** | | |  |
 
@@ -36,7 +36,7 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 - [x] **W3 Keep purchase evidence:** add a "cancellation backdated" event to `mock_gstn`, plus supplier snapshots
       (`snapshots.py`) → list exposed invoices → evidence pack (`itc.evidence_pack`), with proof present and missing.
 - [x] Append-only audit log per case (`case.open`, `owner.approved`, `shop.asked`, `supplier.messaged`,
-      `ims.pending_saved`, `ca.handoff`, `case.closed`). `ca.approved` comes with the CA dashboard (10 Dec).
+      `ims.pending_saved`, `ca.handoff`, `case.closed`). The CA's decision is `ca.decided` (28 Nov).
 - [x] Agent-loop tests on the mock portal: each workflow twice in a row, with approvals replayed (`tests/test_agent.py`).
 - [x] Review and merge `dakshan/agent-loop` into `main` by pull request (PR #1).
 - [x] Multilingual: messages go out in each recipient's language (shop: profile; supplier: own record), with the
@@ -75,6 +75,15 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
+
+### 2026-11-28 · Dakshan (with Claude)
+- CA dashboard built (branch `dakshan/ca-dashboard`, plan in `docs/superpowers/plans/`): every hand-off now waits
+  for the CA's decision, with IMS buttons only when an IMS record exists (W2 bills missing from 2B get Wait /
+  Follow up / Close); W3 evidence says when the portal was observed instead of "at purchase"; FastAPI
+  `dashboard.py` + React page. 256 tests. Stage path checked offline in the browser.
+- Decisions behind it (cross-check of Gemini, Claude and ChatGPT reviews): `docs/PROGRESS-LOG.md` section 5b.
+- **Unverified:** live run with `--channel telegram` (needs the phone). **Next:** rehearse the stage path live 3
+  times and log time, LLM used and manual steps; then the 40-bill labelled accuracy test.
 
 ### 2026-11-27 (night) · Dakshan (with Claude)
 - Slow drafting fixed (branch `dakshan/fast-drafts`): when `gemini-3.8-flash` is busy, `gemini-3.6-flash` took

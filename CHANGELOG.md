@@ -5,6 +5,23 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- CA dashboard: `python -m gstagent.dashboard` (FastAPI) serves a React page (`frontend/`) over the live agent.
+  Client list, readiness meter (resolved cases only; declined and handed-over cases are not ready), exception
+  queue, case detail with the draft in the recipient's language beside the English, owner approval, the CA's
+  decision, replies (tagged when from a voice note), W3 proof and the audit trail. Clicks carry the hash of the
+  text shown: a stale page or a double click gets "changed" (409) and sends nothing. With `--channel telegram`
+  only the shop's messages go out, to the demo chat; supplier messages stay simulated. A failed AI step can be
+  retried from the page. Demo controls: a day passes, type a reply, reset. 16 offline tests.
+- CA decision step in the agent: after every hand-off the case waits for the CA (`Agent.decide`). Options come
+  from the actual IMS record: Accept / Keep Pending / Reject (as the `ims.treatment` card allows) when the record
+  exists, otherwise Wait for the supplier / Follow up again; Close always needs a reason; W3 offers Collect the
+  missing proof, and missing documents can be marked not applicable. IMS actions are saved on the mock portal
+  only, on the CA's click. 13 offline tests.
+
+### Changed
+- W3 evidence no longer says "at purchase GSTR-2B showed…": each bill now reads "GSTR-2B for 10-2026, observed
+  <date> (SIMULATED)" and "Status on the purchase date: not available", since the snapshot is taken now.
+- A hand-off no longer ends the case: the outcome is the CA's decision.
 - Telegram bot channel (`channels/telegram.py`), now the default for the live demo because Meta locks a new
   WhatsApp account until the business is verified (error 131031). Sends text and voice notes, reads typed or
   voice replies by long polling (no public address needed), only to and from `TELEGRAM_DEMO_CHAT`; the bot token
