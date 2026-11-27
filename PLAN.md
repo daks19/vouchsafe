@@ -76,6 +76,12 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
 
+### 2026-11-27 (night) · Dakshan (with Claude)
+- Slow drafting fixed (branch `dakshan/fast-drafts`): when `gemini-3.8-flash` is busy, `gemini-3.6-flash` took
+  18–32 s on short text; text-only calls now time out after 6 s and move on (`flash-lite` answers in ~1 s).
+  Translation now ~7.5 s at worst under load. 228 tests.
+- **Next:** run the live W1 in a few more languages; native-speaker check of the translations.
+
 ### 2026-11-27 (evening) · Dakshan (with Claude)
 - Meta WhatsApp is locked until business verification (see Known gaps); inbound works, outbound fails (131031).
 - Sarvam tested live: TTS returns Ogg/Opus (WhatsApp/Telegram voice-note format); STT read the Hindi clip back word for word.
@@ -84,7 +90,7 @@ left, and what the next person should do first. Keep each entry to a few lines; 
 - **Live run (Tamil):** question went out as text plus voice note; the Tamil voice reply was transcribed word for
   word, read as `never_ordered`, and the case was handed to the CA. Drafting once took ~1 min (Hindi run; Gemini busy).
 - **Not verified:** other languages live; answer buttons not built (replies are typed or spoken).
-- **Next:** find why drafting can take a minute (too slow on stage); run the live W1 in a few more languages.
+- **Next:** run the live W1 in a few more languages.
   Setup for a new machine: bot from @BotFather → `TELEGRAM_BOT_TOKEN`, send /start,
   `python -m gstagent.channels.telegram` → `TELEGRAM_DEMO_CHAT`, then `python -m gstagent.channels.live --lang ta-IN`.
 

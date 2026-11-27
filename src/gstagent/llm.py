@@ -27,7 +27,8 @@ GEMINI_MODELS = ("gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"
 GROQ_TEXT_MODEL, GROQ_VISION_MODEL = "openai/gpt-oss-120b", "qwen/qwen3.8-27b"
 FALLBACK = {"gemini": "groq", "groq": "gemini"}  # used when the main one is busy and its key is set
 KEYS = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY", "claude": "ANTHROPIC_API_KEY"}
-TIMEOUT = 120
+TIMEOUT = 120  # bill photos
+TEXT_TIMEOUT = 6  # short messages: a model this slow is overloaded, so hand over to the next one
 
 
 class LLMError(Exception):
@@ -85,9 +86,9 @@ def _call(p: str, content: list[dict], schema: dict, key: str, model: str | None
         raise LLMError(f"could not reach {p}: {e}") from e
 
 
-def _post(url: str, headers: dict, body: dict) -> dict:
+def _post(url: str, headers: dict, body: dict, timeout: float = TIMEOUT) -> dict:
     try:
-        r = httpx.post(url, headers=headers, json=body, timeout=TIMEOUT)
+        r = httpx.post(url, headers=headers, json=body, timeout=timeout)
     except httpx.TimeoutException as e:
         raise Busy(f"timed out: {e}") from e
     if r.status_code in (401, 403):
@@ -105,12 +106,14 @@ def _gemini(content: list[dict], schema: dict, key: str, model: str | None = Non
              else {"type": "image", "data": b["source"]["data"], "mime_type": b["source"]["media_type"]}
              for b in content]
     models = [model] if model else list(GEMINI_MODELS)
+    timeout = TIMEOUT if any(b["type"] == "image" for b in content) else TEXT_TIMEOUT
     for i, model in enumerate(models):
         try:
             out = _post("https://generativelanguage.googleapis.com/v1beta/interactions",
                         {"x-goog-api-key": key},
                         {"model": model, "input": parts, "store": False,
-                         "response_format": {"type": "text", "mime_type": "application/json", "schema": schema}})
+                         "response_format": {"type": "text", "mime_type": "application/json", "schema": schema}},
+                        timeout)
             break
         except Busy:
             if i == len(models) - 1:
@@ -135,7 +138,8 @@ def _groq(content: list[dict], schema: dict, key: str, model: str | None = None)
     out = _post("https://api.groq.com/openai/v1/chat/completions", {"Authorization": f"Bearer {key}"},
                 {"model": model, "messages": [{"role": "user", "content": blocks}],
                  "response_format": {"type": "json_schema",
-                                     "json_schema": {"name": "reply", "strict": True, "schema": schema}}})
+                                     "json_schema": {"name": "reply", "strict": True, "schema": schema}}},
+                TIMEOUT if images else TEXT_TIMEOUT)
     choice = out["choices"][0]
     if choice.get("finish_reason") != "stop":
         raise LLMError(f"Groq stopped with {choice.get('finish_reason')}; try again")
