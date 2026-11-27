@@ -75,6 +75,9 @@ def test_w3_lists_exposed_bills_with_snapshots_and_evidence(portal):
     v = demo.run(agent(portal), portal)["W3:29CHCFC7955B1Z0"]
     pack = next(e["summary"] for e in v["timeline"] if e["kind"] == "ca.handoff")
     assert "3 bills" in pack and "₹16,047" in pack and "1 of 7 documents" in pack and "not binding" in pack
+    # says what was seen and when, never "at purchase": the snapshot is taken now, not on the purchase date
+    assert "At purchase" not in pack and "GSTR-2B for 10-2026, observed " in pack and "(SIMULATED)" in pack
+    assert pack.count("Status on the purchase date: not available.") == 3 and "Available: tax invoices" in pack
     assert len(v["snapshots"]) == 3 and all(len(s["sha256"]) == 64 for s in v["snapshots"])
 
 
