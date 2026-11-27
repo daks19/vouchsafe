@@ -37,6 +37,11 @@ PROFILE = data.load_profile()
 FORMS = ("GSTR-2B", "GSTR-1A", "GSTR-1", "GSTR-3B", "IFF")  # form names whose digits the guard may see
 MAX_ASKS = 2     # W1: ask the receiver at most twice, then hand to the CA
 MAX_CHECKS = 3   # W2: re-check the portal three times, then hand to the CA
+CA_IMS = {"accept": "ACCEPTED", "pending": "PENDING", "reject": "REJECTED"}  # CA choice -> IMS action
+CA_OUTCOME = {"accept": "The CA accepted it in IMS (SIMULATED).",
+              "pending": "The CA kept it Pending in IMS (SIMULATED).",
+              "reject": "The CA rejected it in IMS (SIMULATED).",
+              "collect_proof": "The CA asked for the missing proof."}
 
 
 class CaseState(TypedDict, total=False):
@@ -51,6 +56,8 @@ class CaseState(TypedDict, total=False):
     asks: int
     checks: int
     snapshots: list[dict]
+    missing: list[str]            # W3: evidence documents not in the pack
+    decision: dict | None         # the CA's choice after a hand-off
     outcome: str
     timeline: Annotated[list[dict], operator.add]   # append-only audit log
     outbox: Annotated[list[dict], operator.add]     # messages sent (channel is simulated until 7 Dec)
@@ -80,6 +87,19 @@ def _draft(s: CaseState, kind: str, to: str, text: str, then: str, after: str | 
         raise ValueError(f"number guard blocked a {kind}: {g.unknown}")
     return {"kind": kind, "to": to, "text": text, "lang": "en-IN", "approver": "owner", "then": then,
             "after": after, "outcome": outcome}
+
+
+def ca_problem(waiting: dict, ans: dict) -> str | None:
+    """Why a CA decision can't be taken as given, or None. Checked by Agent.decide and again inside the graph."""
+    if ans.get("sha256") != waiting["sha256"]:
+        return "the hand-off text changed since it was shown"
+    if ans.get("choice") not in waiting["options"]:
+        return f"{ans.get('choice')!r} is not an option here; options: {', '.join(waiting['options'])}"
+    if ans["choice"] == "closed" and not str(ans.get("reason") or "").strip():
+        return "Closed needs a reason"
+    if not set(ans.get("not_applicable") or []) <= set(waiting["missing"]):
+        return "only missing documents can be marked not applicable"
+    return None
 
 
 def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date, checkpointer,
@@ -152,7 +172,62 @@ def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date
         return {"draft": _draft(s, "ca_handoff", "CA", text, then="handoff", extra=(str(s["checks"]), tl.explanation))}
 
     def handoff(s: CaseState):
-        return {"outcome": "Handed to the CA with the full case.", "timeline": [_event("ca.handoff", s["draft"]["text"])]}
+        return {"timeline": [_event("ca.handoff", s["draft"]["text"])]}
+
+    # --- the CA decides ----------------------------------------------------------------------------
+    def ca_options(s: CaseState) -> tuple[list[str], dict | None]:
+        """IMS choices only when the supplier's record is in IMS, and only those the rule card allows for it."""
+        f = s["facts"]
+        if s["workflow"] == "W3":
+            return ["collect_proof", "closed"], None
+        r = portal.get("/mock-gstn/ims", params={"gstin": PROFILE.gstin, "rtnprd": f["period"]})
+        r.raise_for_status()
+        rec = next((x for x in r.json()["records"]
+                    if x["ctin"] == f["ctin"] and norm_inv(x["inum"]) == norm_inv(f["invoice_no"])), None)
+        if rec is None:
+            return ["wait_supplier", "follow_up", "closed"], None
+        on = period_start(f["period"])
+        opts = [c for c, a in CA_IMS.items()
+                if RULES.evaluate("ims.treatment", on, doc_type=rec["doc_type"], action=a).value["allowed"]]
+        return opts + ["closed"], {"key": rec["key"], "doc_type": rec["doc_type"], "action": rec["action"]}
+
+    def ca_decide(s: CaseState):
+        opts, rec = ca_options(s)
+        w = {"type": "ca_decision", "text": s["draft"]["text"], "options": opts, "record": rec,
+             "missing": s.get("missing", []), "sha256": _sha(s["draft"])}
+        ans = interrupt(w) or {}
+        why = ca_problem(w, ans)
+        if why:
+            return {"decision": None, "timeline": [_event("ca.decision_refused", why)]}
+        c, note, na = ans["choice"], str(ans.get("note") or "").strip(), list(ans.get("not_applicable") or [])
+        summary = c + (f": {note}" if note else "") + (f"; reason: {ans['reason'].strip()}" if c == "closed" else "") \
+            + (f"; not applicable: {', '.join(na)}" if na else "")
+        again = c in ("wait_supplier", "follow_up")  # another full round of portal checks
+        return {"decision": {**ans, "record": rec}, "checks": 0 if again else s.get("checks", 0),
+                "timeline": [_event("ca.decided", summary)]}
+
+    def ca_route(s: CaseState) -> str:
+        d = s.get("decision")
+        if not d:
+            return "ca_decide"
+        return "ca_ims" if d["choice"] in CA_IMS else {"wait_supplier": "w2_wait", "follow_up": "w2_ask"}.get(
+            d["choice"], "ca_close")
+
+    def ca_ims(s: CaseState):
+        d = s["decision"]
+        ctin, inum = d["record"]["key"].split("|", 1)
+        r = portal.post("/mock-gstn/ims/save", json={"gstin": PROFILE.gstin, "rtnprd": s["facts"]["period"], "actions": [
+            {"ctin": ctin, "inum": inum, "action": CA_IMS[d["choice"]]}]})
+        if r.status_code != 200:  # the portal refused: the CA sees it and decides again
+            return {"decision": None, "timeline": [_event("ims.save_failed", r.text)]}
+        out = CA_OUTCOME[d["choice"]]
+        return {"outcome": out, "timeline": [_event("ims.ca_saved", f"{inum} {CA_IMS[d['choice']]}"),
+                                             _event("case.closed", out)]}
+
+    def ca_close(s: CaseState):
+        d = s["decision"]
+        out = CA_OUTCOME.get(d["choice"]) or f"Closed by the CA: {d['reason'].strip()}"
+        return {"outcome": out, "timeline": [_event("case.closed", out)]}
 
     # --- W1: confirm the delivery ----------------------------------------------------------------
     def w1_ask(s: CaseState):
@@ -265,12 +340,13 @@ def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date
             lines.append(f"- {b.invoice_no} dated {_dd(b.invoice_date.isoformat())}, GST {rupees(b.tax)}. "
                          f"At purchase GSTR-2B showed it {'reported' if sn['in_gstr2b'] else 'not reported'} "
                          f"(snapshot {sn['sha256'][:12]}). Evidence: {p.value['present_count']} of {p.value['total']} documents.")
+        missing = list(dict.fromkeys(k for p in packs for k in p.value["missing"]))
         lines += list(dict.fromkeys(p.explanation for p in packs))  # same explanation for many bills: say it once
         extra = (st["effective_from"], str(len(bills)), rupees(total), *(rupees(b.tax) for b in bills),
                  *(b.invoice_no for b in bills), *(b.invoice_date.isoformat() for b in bills),
                  *(sn["sha256"][:12] for sn in snaps), *(p.explanation for p in packs),
                  *(f"{p.value['present_count']} {p.value['total']}" for p in packs))
-        return {"snapshots": snaps, "facts": {**f, "supplier": name},
+        return {"snapshots": snaps, "missing": missing, "facts": {**f, "supplier": name},
                 "draft": _draft(s, "ca_handoff", "CA", "\n".join(lines), then="handoff", extra=extra),
                 "timeline": [_event("portal.checked", f"cancelled from {st['effective_from']}; {len(bills)} bills exposed")]}
 
@@ -279,7 +355,8 @@ def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date
                      ("done", done), ("handoff_draft", handoff_draft), ("handoff", handoff),
                      ("w1_ask", w1_ask), ("w1_wait", w1_wait), ("w1_understand", w1_understand), ("w1_bill", w1_bill),
                      ("w1_ims", w1_ims), ("ims_save", ims_save),
-                     ("w2_ask", w2_ask), ("w2_wait", w2_wait), ("w2_recheck", w2_recheck), ("w3_assess", w3_assess)]:
+                     ("w2_ask", w2_ask), ("w2_wait", w2_wait), ("w2_recheck", w2_recheck), ("w3_assess", w3_assess),
+                     ("ca_decide", ca_decide), ("ca_ims", ca_ims), ("ca_close", ca_close)]:
         g.add_node(name, fn)
     g.add_edge(START, "open_case")
     g.add_conditional_edges("open_case", lambda s: {"W1": "w1_ask", "W2": "w2_ask", "W3": "w3_assess"}[s["workflow"]])
@@ -293,7 +370,10 @@ def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date
     g.add_edge("w2_wait", "w2_recheck")
     g.add_conditional_edges("w2_recheck", w2_route)
     g.add_conditional_edges("w3_assess", lambda s: END if s.get("outcome") else "approve")
-    for n in ("declined", "done", "handoff"):
+    g.add_edge("handoff", "ca_decide")
+    g.add_conditional_edges("ca_decide", ca_route)
+    g.add_conditional_edges("ca_ims", lambda s: END if s.get("outcome") else "ca_decide")
+    for n in ("declined", "done", "ca_close"):
         g.add_edge(n, END)
     return g.compile(checkpointer=checkpointer)
 
@@ -322,11 +402,27 @@ class Agent:
         self.graph.invoke(Command(resume=value), self._cfg(case_id))
         return self.view(case_id)
 
-    def approve(self, case_id: str, yes: bool = True) -> dict:
+    def approve(self, case_id: str, yes: bool = True, sha256: str | None = None) -> dict:
+        """`sha256` is the hash of the text the person saw; a different one means the page is stale."""
         w = self.view(case_id)["waiting"]
         if not w or w["type"] != "approval":
             raise ValueError(f"{case_id} is not waiting for an approval")
+        if sha256 is not None and sha256 != w["sha256"]:
+            raise ValueError("the text changed since it was shown")
         return self.answer(case_id, {"approve": yes, "sha256": w["sha256"]})
+
+    def decide(self, case_id: str, choice: str, note: str = "", reason: str = "", not_applicable=(),
+               sha256: str | None = None) -> dict:
+        """The CA's decision on a handed-over case. Raises ValueError (and changes nothing) if it can't be taken."""
+        w = self.view(case_id)["waiting"]
+        if not w or w["type"] != "ca_decision":
+            raise ValueError(f"{case_id} is not waiting for the CA")
+        ans = {"choice": choice, "note": note, "reason": reason, "not_applicable": list(not_applicable),
+               "sha256": w["sha256"] if sha256 is None else sha256}
+        why = ca_problem(w, ans)
+        if why:
+            raise ValueError(why)
+        return self.answer(case_id, ans)
 
     def view(self, case_id: str) -> dict:
         st = self.graph.get_state(self._cfg(case_id))
