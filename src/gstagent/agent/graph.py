@@ -83,7 +83,8 @@ def _draft(s: CaseState, kind: str, to: str, text: str, then: str, after: str | 
 
 
 def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date, checkpointer,
-          translate: Callable[[str, str], str] = language.translate):
+          translate: Callable[[str, str], str] = language.translate,
+          deliver: Callable[[dict], str] | None = None):
     def message(s: CaseState, text: str, after: str, outcome: str | None = None) -> dict:
         """A message to a person, in their language. The English stays beside it for the owner to check."""
         f = s["facts"]
@@ -127,9 +128,10 @@ def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date
         d = s["draft"]
         kind = "shop.asked" if s["workflow"] == "W1" else "supplier.messaged"
         lang = language.LANGUAGES.get(d["lang"], d["lang"])
-        return {"outbox": [{"to": d["to"], "lang": d["lang"], "text": d["text"], "text_en": d.get("text_en"),
-                            "note": d.get("note"), "sha256": _sha(d)}],
-                "timeline": [_event(kind, f"Sent to {d['to']} in {lang} (simulated channel)")]}
+        item = {"to": d["to"], "lang": d["lang"], "text": d["text"], "text_en": d.get("text_en"),
+                "note": d.get("note"), "sha256": _sha(d), "voice": s["workflow"] == "W1"}  # the shop gets a voice note
+        how = deliver(item) if deliver else "simulated channel"
+        return {"outbox": [item], "timeline": [_event(kind, f"Sent to {d['to']} in {lang} ({how})")]}
 
     def done(s: CaseState):
         return {"outcome": s["draft"]["outcome"], "timeline": [_event("case.closed", s["draft"]["outcome"])]}
@@ -301,9 +303,11 @@ class Agent:
 
     def __init__(self, portal: httpx.Client, db: str = ":memory:",
                  classify: Callable[[str, str], str] = reply_mod.classify, today: date | None = None,
-                 translate: Callable[[str, str], str] = language.translate):
+                 translate: Callable[[str, str], str] = language.translate,
+                 deliver: Callable[[dict], str] | None = None):
+        """`deliver` sends an approved message on a real channel and says how; None keeps it simulated."""
         self.conn = sqlite3.connect(db, check_same_thread=False)
-        self.graph = build(portal, classify, today or date.today(), SqliteSaver(self.conn), translate)
+        self.graph = build(portal, classify, today or date.today(), SqliteSaver(self.conn), translate, deliver)
 
     @staticmethod
     def _cfg(case_id: str) -> dict:
