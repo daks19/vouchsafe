@@ -1,58 +1,58 @@
 {
   "supplier_name": {
-    "value": "Nandi Hardware",
-    "confidence": 0.88
+    "value": "NANDI HARDWARE",
+    "confidence": 0.99
   },
   "supplier_gstin": {
     "value": "29SMBPN4622B1ZW",
-    "confidence": 0.97
+    "confidence": 0.99
   },
   "buyer_gstin": {
     "value": "29KEMPR1791C1ZW",
-    "confidence": 0.92
+    "confidence": 0.99
   },
   "doc_type": {
     "value": "INV",
-    "confidence": 0.91
+    "confidence": 0.99
   },
   "invoice_no": {
     "value": "NH/2291",
-    "confidence": 0.94
+    "confidence": 0.99
   },
   "invoice_date": {
     "value": "2026-10-27",
-    "confidence": 0.97
+    "confidence": 0.99
   },
   "place_of_supply": {
     "value": "29",
-    "confidence": 0.92
+    "confidence": 0.99
   },
   "hsn": {
     "value": "8302, 7318",
-    "confidence": 0.94
+    "confidence": 0.99
   },
   "taxable_value": {
     "value": "14500.00",
-    "confidence": 0.92
+    "confidence": 0.99
   },
   "rate": {
     "value": "18",
-    "confidence": 0.92
+    "confidence": 0.99
   },
   "igst": {
-    "value": "0.00",
-    "confidence": 0.91
+    "value": "0",
+    "confidence": 0.99
   },
   "cgst": {
     "value": "1305.00",
-    "confidence": 0.9
+    "confidence": 0.99
   },
   "sgst": {
     "value": "1305.00",
-    "confidence": 0.97
+    "confidence": 0.99
   },
   "total": {
     "value": "17110.00",
-    "confidence": 0.92
+    "confidence": 0.99
   }
 }

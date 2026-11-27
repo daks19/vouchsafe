@@ -8,7 +8,7 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 
 | Due | Milestone | Done when | Status | Owner |
 |---|---|---|---|---|
-| 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Built; live check passed on Gemini free tier (26 Nov) | Dakshan |
+| 29 Nov | **P0 pipeline** | Bill photo → Claude fields → validators → matcher → CA-queue exception with reason and cited rule (synthetic data) | Done; fixtures are live Gemini recordings (27 Nov) | Dakshan |
 | 3 Dec | **Agent + three workflows** | LangGraph loop runs W1, W2, W3 end to end on the mock portal, twice in a row, with approval pauses | Built, merged (PR #1); live run passed in Hindi, Tamil, Telugu (26 Nov) | Dakshan |
 | 7 Dec | **Real channels** | WhatsApp question and Sarvam voice reply in Hindi, Tamil, Telugu, Kannada, English and the other supported languages on a low-cost Android | Not started |  |
 | 10 Dec | **CA dashboard + accuracy** | Dashboard shows each case with replies and proof; extraction accuracy measured on 20–40 real bills | Not started |  |
@@ -22,7 +22,7 @@ Taking a task? Put your name in its Owner cell first, so two people (or two agen
 - [x] Run the live LLM call once with a key (`cp .env.example .env`, Gemini's key is free):
       `uv run python -m gstagent.ca_queue <png> --save-reply out.json`.
       Compare it with the hand-made fixture, then replace the three `.reply.json` files with real recordings.
-- [ ] Decide whether the README "Status" line can say P0 is done (only after the live check passes).
+- [x] The three `.reply.json` fixtures are live Gemini recordings (27 Nov); README says P0 is done.
 
 ## Next: agent + three workflows (by 3 Dec)
 
@@ -70,6 +70,11 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
+
+### 2026-11-27 (late morning) · Dakshan (with Claude)
+- Branch `dakshan/live-fixtures`: the 3 bill fixtures are now live Gemini recordings (all read right, ~5.5 s
+  each, Groq fallback off for the run). README marks P0 done. 211 tests pass.
+- **Next:** start the 7 Dec channels (WhatsApp + Sarvam voice); check their costs first.
 
 ### 2026-11-27 · Dakshan (with Claude)
 - Live Groq check (`qwen/qwen3.8-27b`, 4–6.5 s per bill): Nandi read right; Chamundi's date read as 10 Jan
