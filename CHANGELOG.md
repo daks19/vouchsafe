@@ -59,13 +59,14 @@ All notable changes to this project. Newest first. Dates are when the work lande
 - `docs/SPEC.md`: the product spec, moved into the repo so the whole team works from one copy.
 
 ### Changed
+- The 3 bill fixtures (`tests/fixtures/bills/*.reply.json`) are now live Gemini recordings instead of hand-made
+  replies; same values, only capitals, `0` vs `0.00` and confidence scores differ.
 - No more Kannada-only defaults: model defaults are `en-IN`; synthetic suppliers now use Hindi, Tamil, Telugu,
   Marathi, Malayalam, English and Kannada; supplier messages no longer open with a Kannada greeting.
 - README "Next steps" now points to PLAN.md instead of keeping its own list.
 
 ### Known limits
-- The live Claude call has not been run yet (no key on the dev machine). The fixture replies are hand-made in the
-  reply schema, not recordings.
+- The paid Claude provider has not been run live (Gemini and Groq have).
 
 ## 2026-11-20: prototype core
 

@@ -8,7 +8,7 @@ An agent that runs a micro business's GST close, from the bills in its WhatsApp 
 It chases the suppliers whose filings put the owner's input credit at risk, explains to the owner in
 his own language what is about to be filed in his name, and **stops at the line where a professional files**.
 
-> **Status: P0 pipeline + agent loop (branch `dakshan/agent-loop`).** A bill photo goes through Claude vision
+> **Status: P0 pipeline done; agent loop built.** A bill photo goes through an LLM's vision (Gemini by default)
 > (`extract.py`), Python validators (`validate.py`) and the matcher + rule cards into a CA exception queue
 > (`ca_queue.py`). A LangGraph agent (`agent/`) runs the three workflows on each mismatch, pausing for the
 > owner's approval before every outward action. Synthetic data, simulated GST portal and message channel.
@@ -39,7 +39,7 @@ uv run python -m gstagent.agent.demo --lang hi-IN       # shop speaks Hindi; any
 
 Fixture bills (`tests/fixtures/bills/`): `nandi_missing_in_2b` (supplier hasn't reported it → ITC at risk),
 `chamundi_matches_2b` (matches the 2B-only record → nothing to review), `kaveri_wrong_split` (IGST inside one
-state → re-snap). Their `.reply.json` files are hand-made in Claude's reply schema, not live recordings yet.
+state → re-snap). Their `.reply.json` files are live Gemini recordings (27 Nov), replayed offline in tests.
 
 ## Layout
 

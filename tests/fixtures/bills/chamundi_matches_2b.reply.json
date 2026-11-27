@@ -1,58 +1,58 @@
 {
   "supplier_name": {
-    "value": "Chamundi Packaging",
-    "confidence": 0.91
+    "value": "CHAMUNDI PACKAGING",
+    "confidence": 1.0
   },
   "supplier_gstin": {
     "value": "29CHCFC7955B1Z0",
-    "confidence": 0.93
+    "confidence": 1.0
   },
   "buyer_gstin": {
     "value": "29KEMPR1791C1ZW",
-    "confidence": 0.94
+    "confidence": 1.0
   },
   "doc_type": {
     "value": "INV",
-    "confidence": 0.98
+    "confidence": 1.0
   },
   "invoice_no": {
     "value": "CP/7781",
-    "confidence": 0.92
+    "confidence": 1.0
   },
   "invoice_date": {
     "value": "2026-10-01",
-    "confidence": 0.89
+    "confidence": 1.0
   },
   "place_of_supply": {
     "value": "29",
-    "confidence": 0.94
+    "confidence": 1.0
   },
   "hsn": {
     "value": "4819, 3919",
-    "confidence": 0.92
+    "confidence": 1.0
   },
   "taxable_value": {
     "value": "62000.00",
-    "confidence": 0.89
+    "confidence": 1.0
   },
   "rate": {
     "value": "18",
-    "confidence": 0.9
+    "confidence": 1.0
   },
   "igst": {
-    "value": "0.00",
-    "confidence": 0.99
+    "value": "0",
+    "confidence": 1.0
   },
   "cgst": {
     "value": "5580.00",
-    "confidence": 0.95
+    "confidence": 1.0
   },
   "sgst": {
     "value": "5580.00",
-    "confidence": 0.96
+    "confidence": 1.0
   },
   "total": {
     "value": "73160.00",
-    "confidence": 0.96
+    "confidence": 1.0
   }
 }

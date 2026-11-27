@@ -1,58 +1,58 @@
 {
   "supplier_name": {
-    "value": "Kaveri Plastics",
-    "confidence": 0.97
+    "value": "KAVERI PLASTICS",
+    "confidence": 1.0
   },
   "supplier_gstin": {
     "value": "29SDHCK2013S1ZF",
-    "confidence": 0.92
+    "confidence": 1.0
   },
   "buyer_gstin": {
     "value": "29KEMPR1791C1ZW",
-    "confidence": 0.96
+    "confidence": 1.0
   },
   "doc_type": {
     "value": "INV",
-    "confidence": 0.91
+    "confidence": 1.0
   },
   "invoice_no": {
     "value": "KP/1102",
-    "confidence": 0.88
+    "confidence": 1.0
   },
   "invoice_date": {
     "value": "2026-10-20",
-    "confidence": 0.93
+    "confidence": 1.0
   },
   "place_of_supply": {
     "value": "29",
-    "confidence": 0.94
+    "confidence": 1.0
   },
   "hsn": {
     "value": "3923",
-    "confidence": 0.96
+    "confidence": 1.0
   },
   "taxable_value": {
     "value": "8000.00",
-    "confidence": 0.96
+    "confidence": 1.0
   },
   "rate": {
     "value": "18",
-    "confidence": 0.94
+    "confidence": 1.0
   },
   "igst": {
     "value": "1440.00",
-    "confidence": 0.95
+    "confidence": 1.0
   },
   "cgst": {
-    "value": "0.00",
-    "confidence": 0.94
+    "value": "0",
+    "confidence": 1.0
   },
   "sgst": {
-    "value": "0.00",
-    "confidence": 0.96
+    "value": "0",
+    "confidence": 1.0
   },
   "total": {
     "value": "9440.00",
-    "confidence": 0.97
+    "confidence": 1.0
   }
 }

@@ -2,9 +2,9 @@
 
     uv run python -m gstagent.synth.bill_images      # needs the dev group (Pillow)
 
-Writes tests/fixtures/bills/<name>.png and <name>.reply.json. The replies are hand-made in the
-exact schema Claude is asked for (gstagent.extract.SCHEMA), not live recordings; replace one with a
-real reply via `python -m gstagent.ca_queue <png> --save-reply <name>.reply.json` once a key is set.
+Writes tests/fixtures/bills/<name>.png and <name>.reply.json. The replies it writes are hand-made in
+the reply schema (gstagent.extract.SCHEMA). The committed ones are live Gemini recordings (27 Nov): rerunning
+this overwrites them, so re-record after with `python -m gstagent.ca_queue <png> --save-reply <name>.reply.json`.
 All names, GSTINs and amounts are fictional.
 """
 
