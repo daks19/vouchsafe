@@ -20,10 +20,11 @@ function Approval({ w, busy, onApprove }) {
         {both && <p className="text-sm text-gray-600 whitespace-pre-line bg-white rounded-lg p-3 border" lang="en"><span className="block text-[10px] font-bold text-gray-400 mb-1">ENGLISH</span>{w.text_en}</p>}
       </div>
       {w.note && <p className="text-xs text-amber-800">{w.note}</p>}
+      {w.action === 'ca_handoff' && <p className="text-xs text-amber-800">Next, the CA chooses what to do in IMS (for example Keep Pending).</p>}
       <div className="flex gap-2">
         <button type="button" disabled={busy} onClick={() => onApprove(true, w.sha256)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50">
-          <Send className="w-4 h-4" />{w.approver === 'CA' ? 'Approve as CA' : 'Approve as owner (demo)'}
+          <Send className="w-4 h-4" />{w.approver === 'CA' ? 'Approve as CA' : w.action === 'ca_handoff' ? 'Send to the CA (owner approves)' : 'Approve as owner (demo)'}
         </button>
         <button type="button" disabled={busy} onClick={() => onApprove(false, w.sha256)}
                 className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">Decline</button>

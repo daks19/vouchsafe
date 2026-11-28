@@ -41,6 +41,7 @@ def test_gemini_is_the_default_and_sends_image_and_schema(env):
     assert s["body"]["model"] == llm.GEMINI_MODELS[0] and s["body"]["store"] is False
     assert s["body"]["input"] == [{"type": "image", "data": "QUJD", "mime_type": "image/png"}, TEXT]
     assert s["body"]["response_format"]["schema"] == SCHEMA
+    assert llm.LAST == f"gemini {llm.GEMINI_MODELS[0]}"  # shown on the dashboard
 
 
 def test_gemini_falls_back_to_the_next_free_model_when_busy(env):
@@ -83,6 +84,7 @@ def test_groq_picks_the_vision_model_only_for_images(env):
     assert llm.ask_json([IMAGE, TEXT], SCHEMA) == '{"a": "y"}'
     llm.ask_json([TEXT], SCHEMA)
     assert [s["body"]["model"] for s in sent] == [llm.GROQ_VISION_MODEL, llm.GROQ_TEXT_MODEL]
+    assert llm.LAST == f"groq {llm.GROQ_TEXT_MODEL}"
     assert sent[0]["headers"] == {"Authorization": "Bearer q-key"}
     assert sent[0]["body"]["messages"][0]["content"][0]["image_url"]["url"] == "data:image/png;base64,QUJD"
     assert sent[0]["body"]["response_format"]["json_schema"] == {"name": "reply", "strict": True, "schema": SCHEMA}
