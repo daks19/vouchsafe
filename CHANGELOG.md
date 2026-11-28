@@ -22,6 +22,11 @@ All notable changes to this project. Newest first. Dates are when the work lande
 - W3 evidence no longer says "at purchase GSTR-2B showed…": each bill now reads "GSTR-2B for 10-2026, observed
   <date> (SIMULATED)" and "Status on the purchase date: not available", since the snapshot is taken now.
 - A hand-off no longer ends the case: the outcome is the CA's decision.
+- Date check on bill photos. The model now also copies the invoice date exactly as printed
+  (`invoice_date_printed`), and Python reads it day first, as Indian bills print it (`validate.printed_date`:
+  01/10/2026, 1-Oct-2026, 01.10.26, Oct 1, 2026, ISO). If that disagrees with the model's date, the bill is held
+  and the shop is asked to confirm the date before any supplier is chased. This catches the 27 Nov Groq misread
+  (01/10 read as 10 Jan). Replies recorded before this field existed still pass. 16 offline tests.
 - Telegram bot channel (`channels/telegram.py`), now the default for the live demo because Meta locks a new
   WhatsApp account until the business is verified (error 131031). Sends text and voice notes, reads typed or
   voice replies by long polling (no public address needed), only to and from `TELEGRAM_DEMO_CHAT`; the bot token

@@ -24,6 +24,7 @@ FIELDS = {
     "doc_type": "INV for a tax invoice, CRN for a credit note, DBN for a debit note",
     "invoice_no": "invoice or note number exactly as printed, punctuation included",
     "invoice_date": "invoice date as YYYY-MM-DD",
+    "invoice_date_printed": "the invoice date exactly as printed, same order and separators; do not reorder day and month",
     "place_of_supply": "two-digit state code of the place of supply, e.g. 29",
     "hsn": "HSN/SAC codes, comma-separated",
     "taxable_value": "total taxable value before tax, digits and a decimal point only",
@@ -68,6 +69,7 @@ class BillRead(BaseModel):
     doc_type: Read
     invoice_no: Read
     invoice_date: Read
+    invoice_date_printed: Read | None = None  # absent in replies recorded before 28 Nov
     place_of_supply: Read
     hsn: Read
     taxable_value: Read
@@ -100,7 +102,7 @@ def read_bill(image: bytes, media_type: str, call: Callable[[bytes, str], str] =
         read = BillRead.model_validate(json.loads(call(image, media_type)))
     except (json.JSONDecodeError, ValueError) as e:
         raise ExtractionError(f"model reply did not fit the bill schema: {e}") from e
-    for r in read.__dict__.values():
+    for r in filter(None, read.__dict__.values()):  # a field missing from an old recording is None
         r.confidence = min(max(r.confidence, 0.0), 1.0)
         if r.value is not None and not r.value.strip():
             r.value = None
