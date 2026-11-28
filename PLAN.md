@@ -76,6 +76,13 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
 
+### 2026-11-28 (evening) · Dakshan (with Claude)
+- PR #9 (dashboard) merged after main was merged into it; main has 283 tests.
+- `itc.evidence_pack` v2 (branch `dakshan/evidence-pack-v2`): list per *Shaurya Alloys* para 103(vi); toll and bank
+  proof are "also worth having"; no "X of 7" score. 286 tests.
+- **Unverified:** the para 103(vi) wording comes from commentary, not the judgment itself; get the certified copy
+  (P&H HC site) before the finale. **Next:** live Telegram rehearsal (needs the phone), 3 runs.
+
 ### 2026-11-28 (later) · Dakshan (with Claude)
 - Date check (branch `dakshan/date-check`): bills now carry the date as printed; read day first, it must agree with
   the model's date, or the shop is asked to confirm before a supplier is chased. Catches the Groq 1 Oct / 10 Jan

@@ -21,7 +21,7 @@ Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.
 
 ```bash
 uv sync
-uv run pytest -q                                    # 283 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages, channels, dashboard
+uv run pytest -q                                    # 286 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages, channels, dashboard
 uv run python -m gstagent.demo                      # reconciliation + rule checks on the synthetic trader
 uv run python -m gstagent.synth.generate            # regenerate data/synthetic (deterministic, --seed 7)
 uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; docs at /docs
@@ -93,7 +93,7 @@ state → re-snap). Their `.reply.json` files are live Gemini recordings (27 Nov
 | `gst.rate_check` | 1 (to 21 Sep 2025), 2 (from 22 Sep 2025) | Judged on the invoice's own date; never auto-reject |
 | `itc.time_limit_16_4` | 1 | 30 November after the financial year, or the annual return date if earlier (pass `annual_return_filed_on`). With `filing_scheme`, also the last GSTR-3B that can carry the claim: October's for monthly filers (due 20 Nov), the Jul–Sep quarter's for QRMP filers (due 22/24 Oct) |
 | `itc.gstr1a_flow` | 1 (*verify*) | A GSTR-1A record shows in IMS once saved; its ITC lands in the next GSTR-2B generated after filing (usually the next period's), Rule 60(7)(iia) |
-| `itc.evidence_pack` | 1 (*verify*) | *Shaurya Alloys* Guideline 6: seven documents (invoices, e-way bills, transport receipts, weighbridge slips, toll receipts, stock records, bank payment proof); binding only in Punjab, Haryana and Chandigarh; never a guarantee |
+| `itc.evidence_pack` | 1, 2 (*verify*) | *Shaurya Alloys* para 103(vi): proof such as invoices, e-way bills, transport receipts, weighbridge slips, stock and consumption records (examples, not a checklist; no score). v2 lists bank payment and toll receipts as other useful proof. Binding only in Punjab, Haryana and Chandigarh; never a guarantee |
 | `itc.supplier_reported` | 1 (to Sep 2022), 2 (adds 16(2)(ba) from Oct 2022) | ITC at risk if the supplier has not reported, or if the ITC is restricted under Section 38; reporting is never treated as proof of payment |
 | `itc.rule_37a` | 1 (*verify*) | Supplier's GSTR-3B missing on 30 Sep after the FY → reverse by 30 Nov, re-avail when filed; a year-end check, not a payment detector |
 | `demand.section` | 1 (to Oct 2024), 2 (from Nov 2024, *verify*) | Demands for FY 2024-25 onwards under Section 74A; earlier years under 73/74 |

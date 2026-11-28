@@ -1,0 +1,39 @@
+id: itc.evidence_pack
+version: 2
+title: Evidence pack for a purchase from a supplier whose registration was cancelled with backdated effect
+effective_from: 2026-11-19
+selects_on: the date the pack is built
+params:
+  documents:   # para 103(vi): "such as" the tax invoice and proof of receipt; examples, not a checklist
+    invoice: "tax invoices"
+    eway_bill: "e-way bills"
+    transport_receipt: "transport receipts (lorry receipt / bilty)"
+    weighbridge_slip: "weighbridge slips"
+    stock_record: "stock and consumption records"
+  other_proof:  # not in para 103(vi), still worth having
+    bank_payment: "bank payment proof (GST law needs the supplier paid within 180 days of the invoice)"
+    toll_receipt: "toll receipts (the department may rely on toll data, para 103(iv))"
+  binding_state_codes: ["03", "04", "06"]   # Punjab, Chandigarh, Haryana
+citations:
+  - "Shaurya Alloys Pvt. Ltd. v. State of Punjab, CWP-34296-2024 and connected petitions (P&H HC, 01-10-2026), para 103(vi): the purchasing dealer bears the Section 155 burden and may discharge it with material such as the tax invoice and proof of receipt (e-way bills, transport receipts, weighbridge slips, stock and consumption records); the proper officer must consider it in the order"
+  - "Same judgment, para 103(iv): relied-upon material, which may include e-way bill, vehicle, toll or banking data, must be supplied to the dealer"
+  - "CGST Act s.16(2), second proviso: credit is paid back if the supplier is not paid within 180 days of the invoice"
+  - "Binding within the Punjab and Haryana High Court's jurisdiction (Punjab, Haryana, Chandigarh); persuasive elsewhere"
+verify_before_finale: true
+notes: >-
+  v1 took its list of seven from early news reports. v2 follows para 103(vi) as quoted in later commentary:
+  toll receipts and bank payment move out of the judgment's list into other proof. The window starts the day
+  after v1's examples so v1 stays reproducible. Still check the wording against the certified judgment copy.
+  The pack lists what is present and what is not found, with no "X of N" score: the judgment's list is examples,
+  and the CA judges whether the proof is enough. It never says the credit is safe.
+examples:
+  - {name: every listed document present in Karnataka is persuasive only, as_of: 2026-11-26,
+     inputs: {state_code: "29", present: [invoice, eway_bill, transport_receipt, weighbridge_slip, stock_record]},
+     expect: {not_found: [], other_missing: [bank_payment, toll_receipt], complete: true, binding: false, guarantees_outcome: false}}
+  - {name: typical small trader has the invoice and bank proof, as_of: 2026-11-26,
+     inputs: {state_code: "29", present: [invoice, bank_payment]},
+     expect: {not_found: [eway_bill, transport_receipt, weighbridge_slip, stock_record], other_missing: [toll_receipt],
+              missing: [eway_bill, transport_receipt, weighbridge_slip, stock_record, toll_receipt], complete: false}}
+  - {name: binding in Haryana, as_of: 2026-11-26,
+     inputs: {state_code: "6", present: [invoice]},
+     expect: {binding: true, guarantees_outcome: false}}
