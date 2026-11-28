@@ -94,7 +94,7 @@ export default function App() {
                           onDecide={on('decide')} onRetry={() => on('retry')()} />
             : <p className="text-gray-400">Select a case to see what it is waiting for.</p>}
           <DemoControls detail={detail} busy={busy}
-                        onDay={() => on('day')()} onReply={(text) => on('reply')({ text })}
+                        onDay={() => on('day')({ run: data?.run })} onReply={(text) => on('reply')({ text, run: data?.run })}
                         onReset={() => act(async () => { await post('/api/reset'); setDetail(null); setSelectedId(null); })} />
         </section>
       </main>

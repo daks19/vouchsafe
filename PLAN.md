@@ -80,7 +80,7 @@ left, and what the next person should do first. Keep each entry to a few lines; 
 - CA dashboard built (branch `dakshan/ca-dashboard`, plan in `docs/superpowers/plans/`): every hand-off now waits
   for the CA's decision, with IMS buttons only when an IMS record exists (W2 bills missing from 2B get Wait /
   Follow up / Close); W3 evidence says when the portal was observed instead of "at purchase"; FastAPI
-  `dashboard.py` + React page. 262 tests. Stage path checked offline in the browser.
+  `dashboard.py` + React page. 267 tests. Stage path checked offline in the browser.
 - Decisions behind it (cross-check of Gemini, Claude and ChatGPT reviews): `docs/PROGRESS-LOG.md` section 5b.
 - **Unverified:** live run with `--channel telegram` (needs the phone). **Next:** rehearse the stage path live 3
   times and log time, LLM used and manual steps; then the 40-bill labelled accuracy test.

@@ -26,7 +26,7 @@ from pydantic import BaseModel
 
 from gstagent import data, language
 from gstagent.agent import demo, reply
-from gstagent.agent.graph import RULES, Agent
+from gstagent.agent.graph import RULES, Agent, ca_problem
 from gstagent.channels import live, telegram
 from gstagent.mock_gstn.app import app as mock_app
 
@@ -56,7 +56,11 @@ class Decision(BaseModel):
     sha256: str
 
 
-class Reply(BaseModel):
+class Run(BaseModel):
+    run: int  # the scenario run the page loaded; a tab left open across Reset gets 409
+
+
+class Reply(Run):
     text: str
 
 
@@ -68,9 +72,12 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
     deliver = shop_only(live.deliver) if channel == "telegram" else None
     portal = TestClient(mock_app)
     lock = threading.Lock()  # one agent call at a time: page clicks and the Telegram thread share it
-    s: dict = {}
+    s: dict = {"run": 0}
 
     def reset() -> None:
+        if "agent" in s:
+            s["agent"].close()
+        s["run"] += 1
         s["cases"] = {c["case_id"]: c for c in demo.cases_for(portal, lang)}
         s["agent"] = Agent(portal, classify=classify, today=demo.TODAY, translate=translate, deliver=deliver)
         s["voice"], s["last_error"] = {}, None
@@ -98,14 +105,18 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
     def run(fn: Callable[[], dict]) -> dict:
         try:
             out = fn()
-        except live.ERRORS as e:  # LLM, Telegram or Sarvam failed: the step can be run again with /retry
+        except (*live.ERRORS, ValueError) as e:  # a service or an agent step failed: /retry runs that step again
             s["last_error"] = str(e)
-            raise HTTPException(502, f"A service failed: {e}. Press 'Try again'.") from None
+            raise HTTPException(502, f"A step failed: {e}. Press 'Try again'.") from None
         s["last_error"] = None
         return out
 
     def reply_case() -> str | None:
         return next((c for c in s["cases"] if (s["agent"].view(c)["waiting"] or {}).get("type") == "reply"), None)
+
+    def same_run(run: int) -> None:
+        if run != s["run"]:
+            raise HTTPException(409, "The scenario was reset since this page loaded. Reload the page.")
 
     def on_message(m: dict) -> None:
         """A Telegram message: the reply to the one case waiting for one. Anything else is logged and ignored."""
@@ -141,6 +152,7 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
 
     app = FastAPI(title="Vouchsafe CA workspace (SIMULATED)", lifespan=lifespan)
     app.state.on_message = on_message
+    app.state.scenario = s
     reset()
 
     @app.middleware("http")
@@ -164,7 +176,7 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
                              "title": f"{f.get('supplier', f['ctin'])} {f.get('invoice_no', '')}".strip()})
             return {"cases": rows, "readiness": {"resolved": sum(r["status"] == "resolved" for r in rows),
                                                  "total": len(rows)},
-                    "channel": channel, "lang": lang, "last_error": s["last_error"]}
+                    "channel": channel, "lang": lang, "last_error": s["last_error"], "run": s["run"]}
 
     @app.post("/api/cases/{cid:path}/approve")
     def approve(cid: str, body: Approval):
@@ -180,20 +192,28 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
             w = waiting_for(cid, "ca_decision")
             if body.sha256 != w["sha256"]:
                 raise HTTPException(409, "The case changed since you saw it. Look again before deciding.")
-            try:
-                return s["agent"].decide(cid, body.choice, body.note, body.reason, body.not_applicable, body.sha256)
-            except ValueError as e:
-                raise HTTPException(422, str(e)) from None
+            ans = body.model_dump()
+            why = ca_problem(w, ans)
+            if why:  # the CA's input; a failure inside the agent below is a 502 with "Try again" instead
+                raise HTTPException(422, why)
+            v = run(lambda: s["agent"].answer(cid, ans))
+            if v["timeline"][-1]["kind"] == "ims.save_failed":
+                s["last_error"] = f"The portal refused the IMS save for {cid}: {v['timeline'][-1]['summary']}"
+                raise HTTPException(502, f"The portal refused the IMS save ({v['timeline'][-1]['summary']}). "
+                                         "The case is back with you.")
+            return v
 
     @app.post("/api/cases/{cid:path}/reply")
     def typed_reply(cid: str, body: Reply):
         with lock:
+            same_run(body.run)
             waiting_for(cid, "reply")
             return run(lambda: s["agent"].answer(cid, body.text))
 
     @app.post("/api/cases/{cid:path}/day")
-    def day(cid: str):
+    def day(cid: str, body: Run):
         with lock:
+            same_run(body.run)
             waiting_for(cid, "event")
             return run(lambda: demo.day_passes(s["agent"], portal, cid))
 
@@ -213,7 +233,7 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
             v = s["agent"].view(cid)
             rules = [{"id": r, "title": (card := RULES.get(r, demo.TODAY)).title, "citations": card.citations}
                      for r in RULE_IDS[s["cases"][cid]["workflow"]]]
-            return {**v, "facts": v["facts"] or s["cases"][cid]["facts"], "status": status(cid, v),
+            return {**v, "facts": v["facts"] or s["cases"][cid]["facts"], "status": status(cid, v), "run": s["run"],
                     "voice_replies": s["voice"].get(cid, []), "rules": rules}
 
     @app.post("/api/reset")

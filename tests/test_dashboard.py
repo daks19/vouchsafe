@@ -1,5 +1,6 @@
 """CA dashboard API over the live agent. Offline: simulated channel, scripted reply reading, no translation."""
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -19,6 +20,10 @@ def client():
     TestClient(mock_app).post("/mock-gstn/reset")
 
 
+def run_id(c):  # which run of the scenario the page loaded; Reset starts a new one
+    return c.get("/api/cases").json()["run"]
+
+
 def case(c, cid):
     return c.get(f"/api/cases/{cid}").json()
 
@@ -35,7 +40,7 @@ def decide(c, cid, choice, reason=""):
 
 def to_ca(c):
     approve(c, W1)
-    c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL})
+    c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL, "run": run_id(c)})
     approve(c, W1)
     return case(c, W1)["waiting"]
 
@@ -57,7 +62,7 @@ def test_lists_every_case_with_status_and_readiness(client):
 def test_stage_path_from_question_to_ca_decision(client):
     assert approve(client, W1).status_code == 200
     assert statuses(client)[W1] == "waiting_reply"
-    assert client.post(f"/api/cases/{W1}/reply", json={"text": TAMIL}).status_code == 200
+    assert client.post(f"/api/cases/{W1}/reply", json={"text": TAMIL, "run": run_id(client)}).status_code == 200
     assert approve(client, W1).status_code == 200
     w = case(client, W1)["waiting"]
     assert w["type"] == "ca_decision" and statuses(client)[W1] == "waiting_ca"
@@ -79,7 +84,7 @@ def test_double_click_and_stale_hash_get_409_and_send_nothing(client):
 
 
 def to_ca_from_reply(c):
-    c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL})
+    c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL, "run": run_id(c)})
     approve(c, W1)
     return case(c, W1)["waiting"]
 
@@ -92,8 +97,8 @@ def test_closed_without_reason_is_422(client):
 
 
 def test_reply_and_day_in_the_wrong_state_are_409(client):
-    assert client.post(f"/api/cases/{W1}/reply", json={"text": TAMIL}).status_code == 409
-    assert client.post(f"/api/cases/{W1}/day").status_code == 409
+    assert client.post(f"/api/cases/{W1}/reply", json={"text": TAMIL, "run": run_id(client)}).status_code == 409
+    assert client.post(f"/api/cases/{W1}/day", json={"run": run_id(client)}).status_code == 409
     assert decide(client, W1, "pending").status_code == 409
 
 
@@ -114,7 +119,7 @@ def test_case_detail_has_facts_and_cited_rules(client):
 def test_day_passes_lets_a_supplier_fix_it(client):
     approve(client, "W2:B029")
     assert statuses(client)["W2:B029"] == "waiting_supplier"
-    r = client.post("/api/cases/W2:B029/day")
+    r = client.post("/api/cases/W2:B029/day", json={"run": run_id(client)})
     assert r.status_code == 200 and r.json()["outcome"].startswith("Supplier fixed it")
     assert statuses(client)["W2:B029"] == "resolved"
 
@@ -178,7 +183,7 @@ def test_llm_busy_while_reading_a_reply_can_be_retried():
     TestClient(mock_app).post("/mock-gstn/reset")
     c = TestClient(dashboard.make_app(classify=classify))
     approve(c, W1)
-    r = c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL})
+    r = c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL, "run": run_id(c)})
     assert r.status_code == 502 and "busy" in r.json()["detail"] and statuses(c)[W1] == "needs_retry"
     busy["on"] = False
     assert c.post(f"/api/cases/{W1}/retry").json()["waiting"]["action"] == "ca_handoff"
@@ -230,5 +235,59 @@ def test_a_channel_failure_is_a_plain_502_not_a_crash():
     TestClient(mock_app).post("/mock-gstn/reset")
     c = TestClient(dashboard.make_app(classify=classify), raise_server_exceptions=False)
     approve(c, W1)
-    r = c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL})
+    r = c.post(f"/api/cases/{W1}/reply", json={"text": TAMIL, "run": run_id(c)})
     assert r.status_code == 502 and "Telegram" in r.json()["detail"] and statuses(c)[W1] == "needs_retry"
+
+
+def to_w2_ca(c, cid="W2:B031"):  # W2 bill missing from 2B: question, three days, hand-off
+    approve(c, cid)
+    for _ in range(3):
+        c.post(f"/api/cases/{cid}/day", json={"run": run_id(c)})
+    approve(c, cid)
+    return case(c, cid)["waiting"]
+
+
+def test_a_tab_left_open_across_reset_cannot_reply_into_the_new_run(client):
+    approve(client, W1)
+    old = run_id(client)
+    client.post("/api/reset")
+    approve(client, W1)
+    r = client.post(f"/api/cases/{W1}/reply", json={"text": TAMIL, "run": old})
+    assert r.status_code == 409 and "reset" in r.json()["detail"]
+    assert statuses(client)[W1] == "waiting_reply"
+    assert client.post("/api/cases/W2:B029/day", json={"run": old}).status_code == 409
+
+
+def test_refused_ims_save_tells_the_ca(client, monkeypatch):
+    real = TestClient.post
+    monkeypatch.setattr(TestClient, "post", lambda self, url, **kw: httpx.Response(503, text="portal down")
+                        if str(url).endswith("/ims/save") else real(self, url, **kw))
+    to_ca(client)
+    r = decide(client, W1, "reject")
+    assert r.status_code == 502 and "portal refused" in r.json()["detail"]
+    assert statuses(client)[W1] == "waiting_ca"
+
+
+def test_a_failure_inside_the_agent_after_a_decision_can_be_retried(client, monkeypatch):
+    from types import SimpleNamespace
+    from gstagent.agent import graph
+    to_w2_ca(client)
+    real = graph.guard.check
+    monkeypatch.setattr(graph.guard, "check", lambda text, allowed: SimpleNamespace(ok=False, unknown=["9"]))
+    r = decide(client, "W2:B031", "follow_up")
+    assert r.status_code == 502 and statuses(client)["W2:B031"] == "needs_retry"
+    monkeypatch.setattr(graph.guard, "check", real)
+    assert client.post("/api/cases/W2:B031/retry").json()["waiting"]["action"] == "message"
+
+
+def test_a_bad_decision_is_still_422(client):
+    to_w2_ca(client)
+    assert decide(client, "W2:B031", "reject").status_code == 422  # not offered: no IMS record
+
+
+def test_reset_closes_the_old_case_store(client):
+    import sqlite3
+    old = client.app.state.scenario["agent"]
+    client.post("/api/reset")
+    with pytest.raises(sqlite3.ProgrammingError):
+        old.conn.execute("select 1")
