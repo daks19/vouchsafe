@@ -20,7 +20,7 @@ Build plan: [PLAN.md](PLAN.md) · Rules for contributors and AI agents: [AGENTS.
 
 ```bash
 uv sync
-uv run pytest -q                                    # 227 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages, channels
+uv run pytest -q                                    # 244 tests: rule cards, matcher, guard, mock portal, bill pipeline, agent, languages, channels
 uv run python -m gstagent.demo                      # reconciliation + rule checks on the synthetic trader
 uv run python -m gstagent.synth.generate            # regenerate data/synthetic (deterministic, --seed 7)
 uv run uvicorn gstagent.mock_gstn.app:app --port 8100   # simulated GST portal; docs at /docs
