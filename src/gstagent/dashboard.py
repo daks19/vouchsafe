@@ -12,6 +12,7 @@ to TELEGRAM_DEMO_CHAT; messages to suppliers stay simulated (one phone on stage)
 from __future__ import annotations
 
 import argparse
+import functools
 import logging
 import threading
 from contextlib import asynccontextmanager
@@ -24,7 +25,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
-from gstagent import data, language
+from gstagent import data, language, llm
 from gstagent.agent import demo, reply
 from gstagent.agent.graph import RULES, Agent, ca_problem
 from gstagent.channels import live, telegram
@@ -68,7 +69,8 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
              classify: Callable[[str, str], str] | None = None) -> FastAPI:
     real = live_llm or channel == "telegram"
     classify = classify or (reply.classify if real else (lambda q, r: demo.SCRIPTED.get(r, "unclear")))
-    translate = language.translate if real else demo.offline_translate
+    # the scenario's drafts are the same on every Reset, so translate each once (Reset was ~40 s)
+    translate = functools.cache(language.translate) if real else demo.offline_translate
     deliver = shop_only(live.deliver) if channel == "telegram" else None
     portal = TestClient(mock_app)
     lock = threading.Lock()  # one agent call at a time: page clicks and the Telegram thread share it
@@ -176,7 +178,8 @@ def make_app(lang: str = "ta-IN", channel: str = "none", live_llm: bool = False,
                              "title": f"{f.get('supplier', f['ctin'])} {f.get('invoice_no', '')}".strip()})
             return {"cases": rows, "readiness": {"resolved": sum(r["status"] == "resolved" for r in rows),
                                                  "total": len(rows)},
-                    "channel": channel, "lang": lang, "last_error": s["last_error"], "run": s["run"]}
+                    "channel": channel, "lang": lang, "last_error": s["last_error"], "run": s["run"],
+                    "llm": llm.LAST if real else None}
 
     @app.post("/api/cases/{cid:path}/approve")
     def approve(cid: str, body: Approval):

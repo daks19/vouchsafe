@@ -29,6 +29,7 @@ FALLBACK = {"gemini": "groq", "groq": "gemini"}  # used when the main one is bus
 KEYS = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY", "claude": "ANTHROPIC_API_KEY"}
 TIMEOUT = 120  # bill photos
 TEXT_TIMEOUT = 6  # short messages: a model this slow is overloaded, so hand over to the next one
+LAST: str | None = None  # "provider model" of the last answer, shown on the dashboard
 
 
 class LLMError(Exception):
@@ -118,6 +119,8 @@ def _gemini(content: list[dict], schema: dict, key: str, model: str | None = Non
         except Busy:
             if i == len(models) - 1:
                 raise
+    global LAST
+    LAST = f"gemini {model}"
     if out.get("status") != "completed":
         raise LLMError(f"Gemini stopped with status {out.get('status')!r}; try again")
     texts = [c["text"] for s in out.get("steps", []) if s.get("type") == "model_output"
@@ -143,6 +146,8 @@ def _groq(content: list[dict], schema: dict, key: str, model: str | None = None)
     choice = out["choices"][0]
     if choice.get("finish_reason") != "stop":
         raise LLMError(f"Groq stopped with {choice.get('finish_reason')}; try again")
+    global LAST
+    LAST = f"groq {model}"
     return choice["message"]["content"]
 
 
@@ -163,4 +168,6 @@ def _claude(content: list[dict], schema: dict, effort: str) -> str:
         raise NoCredentials("no Claude credentials: put ANTHROPIC_API_KEY=... in .env, or use --replay") from e
     if msg.stop_reason != "end_turn":
         raise LLMError(f"Claude stopped with {msg.stop_reason}; try again")
+    global LAST
+    LAST = f"claude {msg.model}"
     return next(b.text for b in msg.content if b.type == "text")

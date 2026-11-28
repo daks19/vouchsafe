@@ -5,6 +5,8 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- Dashboard shows which AI model answered last ("Last AI answer: gemini …"), from `llm.LAST`.
+- Live rehearsal results (3 Tamil voice runs over Telegram, all passed) in the PLAN.md Progress log.
 - `itc.evidence_pack` v2 (from 19 Nov 2026): the document list follows *Shaurya Alloys* para 103(vi) as quoted in
   commentary (invoices, e-way bills, transport receipts, weighbridge slips, stock and consumption records). Toll
   receipts (para 103(iv), the department's material) and bank payment proof (s.16(2) 180-day payment rule) move to
@@ -25,6 +27,9 @@ All notable changes to this project. Newest first. Dates are when the work lande
   only, on the CA's click. 13 offline tests.
 
 ### Changed
+- Dashboard Reset reuses live translations (was ~40 s, now under 1 s) and asks before starting over;
+  the banner says "Loading…" instead of "Messages are simulated" until data arrives; the hand-off button
+  reads "Send to the CA (owner approves)" and says the CA chooses next.
 - W3 evidence no longer says "at purchase GSTR-2B showed…": each bill now reads "GSTR-2B for 10-2026, observed
   <date> (SIMULATED)" and "Status on the purchase date: not available", since the snapshot is taken now.
 - A hand-off no longer ends the case: the outcome is the CA's decision.

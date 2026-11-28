@@ -291,3 +291,16 @@ def test_reset_closes_the_old_case_store(client):
     client.post("/api/reset")
     with pytest.raises(sqlite3.ProgrammingError):
         old.conn.execute("select 1")
+
+
+def test_reset_reuses_live_translations(monkeypatch):
+    """Reset took ~40 s live because every draft was translated again; now each text is translated once."""
+    calls = []
+    monkeypatch.setattr(dashboard.language, "translate", lambda text, lang: calls.append(text) or text)
+    monkeypatch.setattr(dashboard.llm, "LAST", None)  # another test may have set it
+    TestClient(mock_app).post("/mock-gstn/reset")
+    c = TestClient(dashboard.make_app(lang="ta-IN", live_llm=True, classify=lambda q, r: "unclear"))
+    first = len(calls)
+    assert first and c.get("/api/cases").json()["llm"] is None  # no model has answered in this offline test
+    assert c.post("/api/reset").status_code == 200 and len(calls) == first
+    TestClient(mock_app).post("/mock-gstn/reset")

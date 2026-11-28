@@ -60,9 +60,10 @@ export default function App() {
       <div role="status" className="bg-amber-100 border-b border-amber-300 text-amber-900 text-sm px-6 py-2 flex items-center gap-2">
         <ShieldAlert className="w-4 h-4 shrink-0" />
         <span><b>SIMULATED:</b> mock GST portal and fictional data.{' '}
-          {data?.channel === 'telegram'
-            ? 'Telegram messages are real and go only to the demo chat.'
+          {!data ? 'Loading…'
+            : data.channel === 'telegram' ? 'Telegram messages are real and go only to the demo chat.'
             : 'Messages are simulated.'}
+          {data?.llm && <span className="text-amber-800"> · Last AI answer: {data.llm}</span>}
         </span>
       </div>
       {error && <div role="alert" className="bg-red-50 text-red-700 text-sm px-6 py-2">{error}</div>}
@@ -95,7 +96,7 @@ export default function App() {
             : <p className="text-gray-400">Select a case to see what it is waiting for.</p>}
           <DemoControls detail={detail} busy={busy}
                         onDay={() => on('day')({ run: data?.run })} onReply={(text) => on('reply')({ text, run: data?.run })}
-                        onReset={() => act(async () => { await post('/api/reset'); setDetail(null); setSelectedId(null); })} />
+                        onReset={() => window.confirm('Start every case over?') && act(async () => { await post('/api/reset'); setDetail(null); setSelectedId(null); })} />
         </section>
       </main>
     </div>

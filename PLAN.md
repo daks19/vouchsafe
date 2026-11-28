@@ -76,6 +76,22 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
 
+### 2026-11-28 (night) · Dakshan (with Claude)
+- **Live rehearsal, 3 runs, all passed** (`--lang ta-IN --channel telegram`, Tamil voice replies from the phone):
+  1. "வரவில்லை" → still coming → IMS Pending approved. 5m19s.
+  2. "வந்துவிட்டது" → arrived → bill photo requested. 2m07s.
+  3. "தெரியல" twice → unclear twice → hand-off → CA Keep Pending (the stage path). 5m43s.
+  Each send took 4–7 s; each reply was understood in 2–10 s. No errors, no manual steps. LLM: Gemini set as
+  primary; which model answered is not recorded.
+- **Found:** start-up and Reset each take ~40 s (all 6 drafts translated live, one by one) and the page sits
+  blank meanwhile, showing "Messages are simulated" until data loads; Reset was hit 6 extra times by mistake.
+  Run 3's extra time was looking for Keep Pending: it appears only after the owner approves the hand-off.
+- **Fixed after the runs** (branch `dakshan/rehearsal-fixes`): Reset reuses translations (now under 1 s; start-up
+  ~6 s); the banner says "Loading…" until data arrives; it shows the model that last answered (it was
+  `gemini-3.5-flash-lite`: the two faster models were busy, which is why start-up was slow); Reset asks first;
+  the hand-off button reads "Send to the CA (owner approves)" and says the CA picks next. 287 tests.
+- **Next:** the 40-bill labelled accuracy test; Hindi and Kannada live runs.
+
 ### 2026-11-28 (evening) · Dakshan (with Claude)
 - PR #9 (dashboard) merged after main was merged into it; main has 283 tests.
 - `itc.evidence_pack` v2 (branch `dakshan/evidence-pack-v2`): list per *Shaurya Alloys* para 103(vi); toll and bank
