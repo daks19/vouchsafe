@@ -2,6 +2,7 @@
 
 import json
 import re
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from gstagent import ca_queue, data, extract
 from gstagent.ca_queue import process
 from gstagent.extract import BillRead, ExtractionError, read_bill
 from gstagent.rules import RuleBook
-from gstagent.validate import image_hash, validate
+from gstagent.validate import image_hash, printed_date, validate
 
 BILLS = Path(__file__).parent / "fixtures" / "bills"
 RULES = RuleBook.load()
@@ -53,7 +54,7 @@ def test_prompt_carries_no_gstin_or_pan():
 def test_read_bill_replays_recorded_reply():
     read = read_bill(png("nandi_missing_in_2b"), "image/png", replay(reply("nandi_missing_in_2b")))
     assert read.invoice_no.value == "NH/2291" and read.supplier_gstin.value == "29SMBPN4622B1ZW"
-    assert all(0 <= r.confidence <= 1 for r in read.__dict__.values())
+    assert all(0 <= r.confidence <= 1 for r in filter(None, read.__dict__.values()))
 
 
 def test_reply_outside_schema_is_refused():
@@ -177,3 +178,38 @@ def test_api_same_photo_twice_is_counted_once(client):
 
 def test_api_refuses_non_images(client):
     assert client.post("/ca-queue/bills", content=b"hi", headers={"content-type": "text/plain"}).status_code == 415
+
+
+# --- the date as printed: Indian bills print the day first --------------------------------------
+
+@pytest.mark.parametrize("text, expected", [
+    ("01/10/2026", date(2026, 10, 1)), ("1-10-2026", date(2026, 10, 1)), ("01.10.26", date(2026, 10, 1)),
+    ("1-Oct-2026", date(2026, 10, 1)), ("01 October 2026", date(2026, 10, 1)), ("Oct 1, 2026", date(2026, 10, 1)),
+    ("2026-10-01", date(2026, 10, 1)), ("27/10/2026", date(2026, 10, 27)),
+    ("31/02/2026", None), ("10/2026", None), ("", None), ("tomorrow", None),
+])
+def test_printed_date_is_read_day_first(text, expected):
+    assert printed_date(text) == expected
+
+
+def test_date_read_month_first_is_caught_before_anyone_is_chased():
+    # what Groq did on 27 Nov: the bill says 01/10/2026, the model returned 10 January
+    c = check(reply("nandi_missing_in_2b", invoice_date="2026-01-10", invoice_date_printed="01/10/2026"))
+    t = c.resnap[0]
+    assert c.bill is None and t.detail["check"] == "date" and t.detail["blocks_matching"]
+    assert "'01/10/2026'" in t.detail["reason"] and "01-10-2026" in t.detail["reason"] and "10-01-2026" in t.detail["reason"]
+    assert "confirm the invoice date" in t.detail["action"]
+
+
+def test_printed_date_that_agrees_passes():
+    c = check(reply("nandi_missing_in_2b", invoice_date_printed="27/10/2026"))
+    assert c.resnap == [] and c.bill.invoice_date == date(2026, 10, 27)
+
+
+def test_unreadable_printed_date_adds_no_check():
+    c = check(reply("nandi_missing_in_2b", invoice_date_printed="27th Oct"))
+    assert c.resnap == []
+
+
+def test_prompt_asks_for_the_date_exactly_as_printed():
+    assert "exactly as printed" in extract.FIELDS["invoice_date_printed"]

@@ -25,6 +25,26 @@ MONEY = ("taxable_value", "rate", "igst", "cgst", "sgst", "total")
 MIN_CONFIDENCE = 0.6
 ARITH_TOLERANCE = Decimal("1.00")
 RESNAP_ACTION = "Ask the shop for a clearer photo of the whole bill."
+MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov",
+                                      "dec"), 1)}
+
+
+def printed_date(text: str) -> date | None:
+    """A date as printed on an Indian bill: day first (01/10/2026 is 1 October). None if it isn't a full date."""
+    t = text.strip()
+    if m := re.fullmatch(r"(\d{4})-(\d{1,2})-(\d{1,2})", t):  # ISO, year first
+        y, mo, d = m.groups()
+    elif m := re.fullmatch(r"([A-Za-z]{3,9})\.? (\d{1,2}),? (\d{4})", t):  # Oct 1, 2026
+        mo, d, y = m.groups()
+    elif m := re.fullmatch(r"(\d{1,2})[/.\- ]+(\d{1,2}|[A-Za-z]{3,9})[/.,\- ]+(\d{4}|\d{2})", t):
+        d, mo, y = m.groups()
+    else:
+        return None
+    mo = int(mo) if mo.isdigit() else MONTHS.get(mo[:3].lower())
+    try:
+        return date(int(y) + (2000 if len(y) == 2 else 0), mo, int(d))
+    except (TypeError, ValueError):
+        return None
 
 
 def image_hash(image: bytes) -> str:
@@ -68,6 +88,15 @@ def validate(read: BillRead, img_hash: str, bill_id: str, profile: TaxpayerProfi
                or (k == "doc_type" and not doc_ok)]
     if unclear:
         resnap("fields", f"Could not read clearly: {', '.join(unclear)}.", blocks=True)
+        return Checked(None, tasks)
+
+    # 1b. The date as printed, read day first, must agree with the model's date (a model once read 01/10 as 10 Jan).
+    p = f.get("invoice_date_printed")
+    shown = printed_date(p.value) if p and p.value else None
+    if shown and shown != inv_date:
+        resnap("date", f"The bill shows the date as '{p.value}'. Read day first, as on Indian bills, that is "
+                       f"{shown:%d-%m-%Y}, but it was read as {inv_date:%d-%m-%Y}.", blocks=True,
+               action="Ask the shop to confirm the invoice date before anyone is asked about this bill.")
         return Checked(None, tasks)
 
     taxable, rate, igst, cgst, sgst, total = (nums[k] for k in MONEY)

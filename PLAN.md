@@ -76,6 +76,14 @@ New code in `src/gstagent/agent/` (LangGraph, SQLite checkpointer, `interrupt()`
 Newest first. One entry per work session, by whoever did the work (person or agent): what changed, where it was
 left, and what the next person should do first. Keep each entry to a few lines; details go in CHANGELOG.md.
 
+### 2026-11-28 (later) · Dakshan (with Claude)
+- Date check (branch `dakshan/date-check`): bills now carry the date as printed; read day first, it must agree with
+  the model's date, or the shop is asked to confirm before a supplier is chased. Catches the Groq 1 Oct / 10 Jan
+  misread. 244 tests on this branch.
+- **Not covered:** a model that copies the printed date wrong too; a bill really printed month first. In the
+  40-bill test, count wrong dates that passed this check separately.
+- **Merge note:** PR #9 (dashboard) changes the same test-count lines in README/AGENTS; fix the count after both land.
+
 ### 2026-11-27 (night) · Dakshan (with Claude)
 - Slow drafting fixed (branch `dakshan/fast-drafts`): when `gemini-3.8-flash` is busy, `gemini-3.6-flash` took
   18–32 s on short text; text-only calls now time out after 6 s and move on (`flash-lite` answers in ~1 s).
@@ -111,7 +119,7 @@ left, and what the next person should do first. Keep each entry to a few lines; 
 
 ### 2026-11-27 · Dakshan (with Claude)
 - Live Groq check (`qwen/qwen3.8-27b`, 4–6.5 s per bill): Nandi read right; Chamundi's date read as 10 Jan
-  instead of 1 Oct (a false mismatch); Kaveri's amounts came back as junk, so the validator asked for a re-snap.
+  instead of 1 Oct (a false mismatch; now caught by the date check, 28 Nov); Kaveri's amounts came back as junk, so the validator asked for a re-snap.
   Nothing unsafe got through, but Groq reads bills worse than Gemini (3/3): keep Gemini first, Groq as backup.
 - **Not verified:** Groq on text (replies, translation).
 - Branch `dakshan/mismatch-reason`: the CA-queue reason and the supplier message now name only the field that
