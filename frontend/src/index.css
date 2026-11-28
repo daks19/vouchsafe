@@ -1,0 +1,457 @@
+/* Theme adapted from IPO SHERPA (frontend/src/index.css): colours, type scale, card and input styles. */
+/* ─── Google Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@import "tailwindcss";
+
+/* ─── Tailwind v4 CSS-first theme tokens ────────────────────── */
+@theme {
+  /* Accent — brand blue scale, interpolated (HSL, consistent hue ~194-206°)
+     through 4 fixed brand anchors so the full 50-950 ramp stays smooth:
+       300 = Sky Blue (Light) #81C3D7
+       500 = Cerulean          #3A7CA5
+       600 = Baltic Blue       #2F6690
+       800 = Yale Blue         #16425B
+     50/100/200 extrapolate lighter, 900/950 extrapolate darker; every other
+     step is a straight HSL blend between its two nearest anchors — not
+     hand-picked, so hover/active states stay visually coherent. */
+  --color-accent-50:  #F6F8F9;
+  --color-accent-100: #D4E2E9;
+  --color-accent-200: #ADD0DD;
+  --color-accent-300: #81C3D7;
+  --color-accent-400: #55A3C6;
+  --color-accent-500: #3A7CA5;
+  --color-accent-600: #2F6690;
+  --color-accent-700: #215577;
+  --color-accent-800: #16425B;
+  --color-accent-900: #0E2F41;
+  --color-accent-950: #071C27;
+
+  /* Alabaster Grey — the palette's neutral, used to warm up flat surfaces
+     (page background, muted panel fills) so they read as part of the same
+     palette instead of a generic cool slate grey next to a warm blue accent. */
+  --color-alabaster-50:  #FBFBFA;
+  --color-alabaster-100: #F3F4F1;
+  --color-alabaster-200: #D9DCD6;
+  --color-alabaster-300: #C2C6BD;
+
+  /* Surface system (light) */
+  --color-surface-0:   #ffffff;
+  --color-surface-50:  #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface-400: #94a3b8;
+  --color-surface-500: #64748b;
+  --color-surface-600: #475569;
+  --color-surface-700: #334155;
+  --color-surface-800: #1e293b;
+  --color-surface-900: #0f172a;
+
+  /* Semantic status */
+  --color-success-50:  #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-warning-50:  #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-danger-50:   #fef2f2;
+  --color-danger-100:  #fee2e2;
+  --color-danger-400:  #f87171;
+  --color-danger-500:  #ef4444;
+  --color-danger-600:  #dc2626;
+
+  /* Supporting indigo & violet */
+  --color-indigo-50:  #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+
+  /* Typography */
+  --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Outfit', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Soft elevation — small, layered, low-opacity shadows only.
+     These tokens were previously only defined in the (inert) legacy
+     tailwind.config.js, so every shadow-card/-md/-lg/-accent class used
+     across the app rendered with zero elevation; defining them here in the
+     @theme block Tailwind v4 actually reads is what makes them apply. */
+  --shadow-card:     0 1px 2px 0 rgba(15, 23, 42, 0.04), 0 1px 3px 0 rgba(15, 23, 42, 0.06);
+  --shadow-card-md:  0 2px 6px -1px rgba(15, 23, 42, 0.07), 0 4px 10px -3px rgba(15, 23, 42, 0.06);
+  --shadow-card-lg:  0 8px 20px -6px rgba(15, 23, 42, 0.10), 0 3px 8px -3px rgba(15, 23, 42, 0.06);
+  --shadow-accent:   0 4px 14px -2px rgba(58, 124, 165, 0.28);
+}
+
+/* ─── Base ──────────────────────────────────────────────────── */
+body {
+  /* Warm alabaster-tinted off-white instead of a cool slate off-white —
+     ties the neutral canvas into the same palette as the blue accent. */
+  background-color: #F7F8F5;
+  color: #1F2937;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ─── Typography scale ───────────────────────────────────────
+   Named scale so pages can move off scattered arbitrary text-[Npx]
+   values without guessing sizes. Applied incrementally per page. ── */
+.text-page-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #1F2937;
+  letter-spacing: -0.01em;
+}
+.text-section-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #1F2937;
+}
+.text-card-title {
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #1F2937;
+}
+.text-body {
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 500;
+  color: #334155;
+}
+.text-caption {
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: #cbd5e1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ─── Premium Glassmorphism & Cards ─────────────────────────── */
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+  border-radius: 16px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover:hover {
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  border-radius: 16px;
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.glass-hover { 
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+}
+.glass-hover:hover {
+  background: #ffffff;
+  border-color: #3A7CA5;
+  box-shadow: 0 12px 24px -6px rgba(58, 124, 165, 0.14), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+}
+
+.glass-accent {
+  background: linear-gradient(135deg, #F6F8F9 0%, #ffffff 100%);
+  border: 1px solid rgba(58, 124, 165, 0.3);
+}
+
+/* ─── Font Display ──────────────────────────────────────────── */
+.font-display { font-family: var(--font-display); }
+
+/* ─── Form Input System (Elevated Light) ───────────────────── */
+.form-input-base {
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
+}
+
+.form-input-base::placeholder {
+  color: #94a3b8;
+  font-size: 13.5px;
+}
+
+.form-input-base:hover {
+  border-color: #cbd5e1;
+  background: #fafbfc;
+}
+
+.form-input-base:focus {
+  outline: none;
+  border-color: #3A7CA5;
+  background: #ffffff;
+  box-shadow: 0 0 0 3.5px rgba(58, 124, 165, 0.14), 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+}
+
+/* Textarea */
+textarea.form-input-base {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.65;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+/* Number inputs */
+input[type="number"].form-input-base {
+  font-family: var(--font-mono);
+  text-align: right;
+  letter-spacing: 0.03em;
+}
+
+/* Select inputs */
+select.form-input-base {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+
+/* ─── Field Labels ──────────────────────────────────────────── */
+.field-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #475569;
+  font-family: var(--font-sans);
+}
+
+/* ─── Character Counter ─────────────────────────────────────── */
+.char-counter {
+  font-size: 10px;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.char-counter.active { color: #3A7CA5; }
+.char-counter.warn   { color: #f59e0b; }
+
+/* Badge styling now lives in the <Badge> component (src/components/ui/Badge.jsx)
+   so variant/icon/size stay in one reusable place instead of duplicated CSS. */
+
+/* ─── Animations ────────────────────────────────────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-5px); }
+}
+.animate-float {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.96); }
+}
+.animate-soft-pulse {
+  animation: soft-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(58, 124, 165, 0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(58, 124, 165, 0); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s infinite;
+}
+
+/* ─── Primary button ────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #3A7CA5 0%, #2F6690 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 10px rgba(58, 124, 165, 0.28);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #55A3C6 0%, #3A7CA5 100%);
+  box-shadow: 0 6px 18px rgba(58, 124, 165, 0.38);
+  transform: translateY(-1.5px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(58, 124, 165, 0.2);
+}
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ─── Secondary button ──────────────────────────────────────── */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
+}
+.btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+/* ─── Danger button ─────────────────────────────────────────── */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.22);
+}
+.btn-danger:hover {
+  background: #b91c1c;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
+}
+.btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ─── Ghost button (no border, no fill) ─────────────────────── */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.btn-ghost:hover {
+  background: #f1f5f9;
+  color: #1F2937;
+}
+
+/* ─── Outline button ─────────────────────────────────────────── */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: #2F6690;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1.5px solid #81C3D7;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.btn-outline:hover {
+  background: #F6F8F9;
+  border-color: #3A7CA5;
+}
+
+/* ─── Glow accent ───────────────────────────────────────────── */
+.glow-accent {
+  box-shadow: 0 0 0 1px rgba(58, 124, 165, 0.15), 0 10px 30px -10px rgba(58, 124, 165, 0.2);
+}
+
+/* ─── Smooth ring progress animation ───────────────────────── */
+circle {
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.7s ease;
+}
+
+.score-bar {
+  transform-origin: left center;
+  animation: score-bar-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes score-bar-in {
+  from { transform: scaleX(0); opacity: 0.4; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+

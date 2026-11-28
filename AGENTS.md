@@ -16,10 +16,11 @@ the right person about each mismatch and keeps evidence. It prepares. A human ap
 
 ```bash
 uv sync
-uv run pytest -q                       # must stay green; currently 244 tests
+uv run pytest -q                       # must stay green; currently 283 tests
 uv run python -m gstagent.demo         # reconciliation on the synthetic trader
 uv run python -m gstagent.ca_queue tests/fixtures/bills/nandi_missing_in_2b.png \
     --replay tests/fixtures/bills/nandi_missing_in_2b.reply.json   # bill photo -> CA queue, offline
+(cd frontend && npm install && npm run build) && uv run python -m gstagent.dashboard   # CA dashboard, offline
 ```
 
 Python 3.12, managed with `uv`. Add packages with `uv add` (runtime) or `uv add --dev` (tests and tooling only).
@@ -47,7 +48,10 @@ Python 3.12, managed with `uv`. Add packages with `uv add` (runtime) or `uv add 
 - Pipeline: `extract.py` (Claude vision) → `validate.py` → `matcher.py` + rule cards → `ca_queue.py`.
 - Agent: `agent/graph.py` (LangGraph). One thread per case. Every outward action is drafted, passes the number
   guard, then waits at the `approve` node; an approval counts only with the hash of the exact text shown.
-  All LLM calls go through `llm.py`.
+  All LLM calls go through `llm.py`. After a hand-off the case waits for the CA's decision (`ca_decision`); its
+  IMS buttons come from the actual IMS record, and a Reject only ever happens on the CA's click.
+- Dashboard: `dashboard.py` (FastAPI over one `Agent`) serves `frontend/` (React; built files in `frontend/dist`,
+  git-ignored).
 - Channels: `channels/telegram.py` (live demo), `channels/whatsapp.py` (needs Meta business verification) and
   `channels/voice.py` (Sarvam). The agent sends through `Agent(deliver=...)`; without it the channel is simulated.
   In the prototype every real message goes to the one demo chat only (`TELEGRAM_DEMO_CHAT` / `WHATSAPP_DEMO_TO`).

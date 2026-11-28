@@ -5,6 +5,23 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- CA dashboard: `python -m gstagent.dashboard` (FastAPI) serves a React page (`frontend/`) over the live agent.
+  Client list, readiness meter (resolved cases only; declined and handed-over cases are not ready), exception
+  queue, case detail with the draft in the recipient's language beside the English, owner approval, the CA's
+  decision, replies (tagged when from a voice note), W3 proof and the audit trail. Clicks carry the hash of the
+  text shown: a stale page or a double click gets "changed" (409) and sends nothing. With `--channel telegram`
+  only the shop's messages go out, to the demo chat; supplier messages stay simulated. A failed AI step can be
+  retried from the page; a failed voice note or network error never stops the Telegram listener, and the page keeps refreshing while a voice note is transcribed. A refused IMS save tells the CA; a typed reply or "a day passes" from a tab left open across Reset is refused. Demo controls: a day passes, type a reply, reset. 25 offline tests.
+- CA decision step in the agent: after every hand-off the case waits for the CA (`Agent.decide`). Options come
+  from the actual IMS record: Accept / Keep Pending / Reject (as the `ims.treatment` card allows) when the record
+  exists, otherwise Wait for the supplier / Follow up again; Close always needs a reason; W3 offers Collect the
+  missing proof, and missing documents can be marked not applicable. IMS actions are saved on the mock portal
+  only, on the CA's click. 13 offline tests.
+
+### Changed
+- W3 evidence no longer says "at purchase GSTR-2B showed…": each bill now reads "GSTR-2B for 10-2026, observed
+  <date> (SIMULATED)" and "Status on the purchase date: not available", since the snapshot is taken now.
+- A hand-off no longer ends the case: the outcome is the CA's decision.
 - Date check on bill photos. The model now also copies the invoice date exactly as printed
   (`invoice_date_printed`), and Python reads it day first, as Indian bills print it (`validate.printed_date`:
   01/10/2026, 1-Oct-2026, 01.10.26, Oct 1, 2026, ISO). If that disagrees with the model's date, the bill is held

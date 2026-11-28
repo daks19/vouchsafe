@@ -3,6 +3,7 @@
 import json
 import re
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -46,10 +47,11 @@ def test_all_three_workflows_run_end_to_end_twice_in_a_row(portal):
     second = demo.run(agent(portal), portal)
     assert {k: strip(v) for k, v in first.items()} == {k: strip(v) for k, v in second.items()}
     out = {k: v["outcome"] for k, v in first.items()}
-    assert out["W1:29CHCFC7955B1Z0|CP/7781"].startswith("Handed to the CA")
+    assert out["W1:29CHCFC7955B1Z0|CP/7781"] == "The CA kept it Pending in IMS (SIMULATED)."
     assert out["W2:B029"].startswith("Supplier fixed it") and out["W2:B030"].startswith("Supplier fixed it")
-    assert out["W2:B031"].startswith("Handed to the CA") and out["W2:B032"].startswith("Handed to the CA")
-    assert out["W3:29CHCFC7955B1Z0"].startswith("Handed to the CA")
+    assert out["W2:B031"] == f"Closed by the CA: {demo.DEMO_REASON}"   # not in 2B: no IMS record to act on
+    assert out["W2:B032"] == "The CA kept it Pending in IMS (SIMULATED)."   # wrong amount: the record is in IMS
+    assert out["W3:29CHCFC7955B1Z0"] == "The CA asked for the missing proof."
     assert all(v["waiting"] is None for v in first.values())
 
 
@@ -59,6 +61,8 @@ def test_every_outward_action_comes_right_after_an_owner_approval(portal):
         for i, k in enumerate(kinds):
             if k in OUTWARD:
                 assert kinds[i - 1] == "owner.approved", (v["case_id"], kinds)
+            if k == "ims.ca_saved":  # the CA's click is the approval for an IMS action they choose
+                assert kinds[i - 1] == "ca.decided", (v["case_id"], kinds)
 
 
 def test_w2_gstr1a_case_explains_credit_lands_next_period(portal):
@@ -71,6 +75,9 @@ def test_w3_lists_exposed_bills_with_snapshots_and_evidence(portal):
     v = demo.run(agent(portal), portal)["W3:29CHCFC7955B1Z0"]
     pack = next(e["summary"] for e in v["timeline"] if e["kind"] == "ca.handoff")
     assert "3 bills" in pack and "₹16,047" in pack and "1 of 7 documents" in pack and "not binding" in pack
+    # says what was seen and when, never "at purchase": the snapshot is taken now, not on the purchase date
+    assert "At purchase" not in pack and "GSTR-2B for 10-2026, observed " in pack and "(SIMULATED)" in pack
+    assert pack.count("Status on the purchase date: not available.") == 3 and "Available: tax invoices" in pack
     assert len(v["snapshots"]) == 3 and all(len(s["sha256"]) == 64 for s in v["snapshots"])
 
 
@@ -207,7 +214,7 @@ def test_w1_runs_in_every_supported_language(portal, lang):
                  translate=fake_hindi), w1_case()
     c["facts"]["lang"] = lang
     v = demo.drive(a, portal, a.open(c)["case_id"], lang)
-    assert v["outcome"].startswith("Handed to the CA") and demo.REPLIES[lang] in v["timeline"][3]["summary"]
+    assert v["outcome"] == "The CA kept it Pending in IMS (SIMULATED)." and demo.REPLIES[lang] in v["timeline"][3]["summary"]
 
 
 def test_demo_has_a_reply_for_every_supported_language():
@@ -255,3 +262,131 @@ def test_supplier_message_names_only_the_field_that_differs(portal):
                       lang="en-IN")
     text = agent(portal).open(c)["waiting"]["text"]
     assert "the date as 10-01-2026" in text and "taxable value" not in text
+
+
+# --- the CA decides after every hand-off ----------------------------------------------------------
+
+IMS_Q = {"gstin": data.load_profile().gstin, "rtnprd": "102026"}
+
+
+def to_ca(portal, a=None):
+    """W1 CP/7781 driven to the CA step: question approved, 'never ordered', hand-off approved."""
+    a = a or agent(portal)
+    c = w1_case()
+    a.open(c)
+    a.approve(c["case_id"])
+    a.answer(c["case_id"], "No, we never ordered this.")
+    return a, c["case_id"], a.approve(c["case_id"])
+
+
+def w2_to_ca(portal, case_id):
+    """A W2 case the supplier never fixes, driven through three portal checks to the CA step."""
+    a = agent(portal)
+    c = next(c for c in demo.cases_for(portal) if c["case_id"] == case_id)
+    a.open(c)
+    v = a.approve(case_id)
+    while v["waiting"]["type"] == "event":
+        v = demo.day_passes(a, portal, case_id)
+    return a, a.approve(case_id)
+
+
+def test_handoff_waits_for_the_ca_with_ims_options(portal):
+    _, _, v = to_ca(portal)
+    assert v["waiting"]["type"] == "ca_decision" and v["outcome"] is None
+    assert v["waiting"]["options"] == ["accept", "pending", "reject", "closed"]
+    assert v["waiting"]["record"]["key"] == "29CHCFC7955B1Z0|CP/7781" and v["waiting"]["missing"] == []
+    assert "never ordered" in v["waiting"]["text"] and len(v["waiting"]["sha256"]) == 64
+
+
+def test_ca_pending_is_saved_on_the_mock_ims(portal):
+    a, cid, _ = to_ca(portal)
+    v = a.decide(cid, "pending", note="ask the manager")
+    assert v["outcome"] == "The CA kept it Pending in IMS (SIMULATED)." and v["waiting"] is None
+    ims = portal.get("/mock-gstn/ims", params=IMS_Q).json()
+    assert next(r for r in ims["records"] if r["key"] == "29CHCFC7955B1Z0|CP/7781")["action"] == "PENDING"
+    assert [e["kind"] for e in v["timeline"]][-3:] == ["ca.decided", "ims.ca_saved", "case.closed"]
+    assert "pending: ask the manager" in v["timeline"][-3]["summary"]
+
+
+def test_ca_reject_happens_only_on_the_ca_click(portal):
+    a, cid, _ = to_ca(portal)
+    ims = portal.get("/mock-gstn/ims", params=IMS_Q).json()
+    assert next(r for r in ims["records"] if r["inum"] == "CP/7781")["action"] == "NO_ACTION"
+    assert a.decide(cid, "reject")["outcome"] == "The CA rejected it in IMS (SIMULATED)."
+    ims = portal.get("/mock-gstn/ims", params=IMS_Q).json()
+    assert next(r for r in ims["records"] if r["inum"] == "CP/7781")["action"] == "REJECTED"
+
+
+def test_ca_closed_needs_a_reason_and_wrong_hash_is_refused(portal):
+    a, cid, v = to_ca(portal)
+    with pytest.raises(ValueError):
+        a.decide(cid, "closed")
+    with pytest.raises(ValueError):
+        a.decide(cid, "closed", reason="   ")
+    with pytest.raises(ValueError):
+        a.decide(cid, "pending", sha256="0" * 64)
+    with pytest.raises(ValueError):
+        a.decide(cid, "wait_supplier")  # not offered: the record exists
+    assert a.view(cid)["waiting"] == v["waiting"]  # refusals change nothing
+    assert a.decide(cid, "closed", reason="Duplicate of CP/7780")["outcome"] == "Closed by the CA: Duplicate of CP/7780"
+
+
+def test_a_bad_resume_value_is_refused_by_the_graph_too(portal):
+    a, cid, v = to_ca(portal)
+    w = a.answer(cid, {"choice": "reject", "sha256": "0" * 64})["waiting"]
+    assert w["type"] == "ca_decision" and a.view(cid)["timeline"][-1]["kind"] == "ca.decision_refused"
+    ims = portal.get("/mock-gstn/ims", params=IMS_Q).json()
+    assert next(r for r in ims["records"] if r["inum"] == "CP/7781")["action"] == "NO_ACTION"
+
+
+def test_w2_bill_missing_from_2b_gets_no_ims_buttons(portal):
+    _, v = w2_to_ca(portal, "W2:B031")
+    assert v["waiting"]["options"] == ["wait_supplier", "follow_up", "closed"] and v["waiting"]["record"] is None
+
+
+def test_w2_wrong_amount_has_an_ims_record(portal):
+    _, v = w2_to_ca(portal, "W2:B032")
+    assert v["waiting"]["options"] == ["accept", "pending", "reject", "closed"]
+
+
+def test_ca_wait_for_supplier_goes_back_to_portal_checks(portal):
+    a, v = w2_to_ca(portal, "W2:B031")
+    v = a.decide("W2:B031", "wait_supplier")
+    assert v["waiting"] == {"type": "event", "waiting_for": "supplier to file GSTR-1A", "checks_done": 0}
+
+
+def test_ca_follow_up_drafts_a_new_supplier_message(portal):
+    a, v = w2_to_ca(portal, "W2:B031")
+    v = a.decide("W2:B031", "follow_up")
+    assert v["waiting"]["type"] == "approval" and v["waiting"]["action"] == "message"
+
+
+def test_w3_ca_options_and_missing_documents(portal):
+    a = agent(portal)
+    c = next(c for c in demo.cases_for(portal) if c["workflow"] == "W3")
+    a.open(c)
+    v = a.approve(c["case_id"])
+    assert v["waiting"]["options"] == ["collect_proof", "closed"] and "toll_receipt" in v["waiting"]["missing"]
+    with pytest.raises(ValueError):
+        a.decide(c["case_id"], "collect_proof", not_applicable=["invoice"])  # present, so it can't be "not applicable"
+    v = a.decide(c["case_id"], "collect_proof", not_applicable=["weighbridge_slip"])
+    assert v["outcome"] == "The CA asked for the missing proof."
+    assert "not applicable: weighbridge_slip" in v["timeline"][-2]["summary"]
+
+
+def test_refused_ims_save_goes_back_to_the_ca(portal, monkeypatch):
+    a, cid, _ = to_ca(portal)
+    real = portal.post
+    monkeypatch.setattr(portal, "post", lambda url, **kw: httpx.Response(503, text="portal down")
+                        if url.endswith("/ims/save") else real(url, **kw))
+    v = a.decide(cid, "reject")
+    assert v["waiting"]["type"] == "ca_decision" and v["outcome"] is None
+    assert v["timeline"][-1]["kind"] == "ims.save_failed"
+
+
+def test_approve_with_a_stale_hash_is_refused_before_anything_happens(portal):
+    a, c = agent(portal), w1_case()
+    a.open(c)
+    with pytest.raises(ValueError, match="changed"):
+        a.approve(c["case_id"], sha256="0" * 64)
+    assert a.view(c["case_id"])["waiting"]["type"] == "approval"

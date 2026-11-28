@@ -40,22 +40,27 @@ def _check(r: httpx.Response) -> dict:
     return r.json()
 
 
+def _post(path: str, **kw) -> dict:
+    try:
+        r = httpx.post(f"{API}/{path}", headers={"api-subscription-key": _key()}, timeout=TIMEOUT, **kw)
+    except httpx.HTTPError as e:  # network trouble is a VoiceError too, so callers' error handling covers it
+        raise VoiceError(f"Sarvam {path}: {type(e).__name__}") from None
+    return _check(r)
+
+
 def speak(text: str, lang: str) -> bytes:
     """Ogg/Opus audio, the format WhatsApp plays as a voice note."""
     if lang not in TTS_LANGS:
         raise VoiceError(f"no Sarvam voice for {lang}")
     if len(text) > MAX_CHARS:
         raise VoiceError(f"message too long to speak ({len(text)} > {MAX_CHARS} characters)")
-    r = httpx.post(f"{API}/text-to-speech", headers={"api-subscription-key": _key()}, timeout=TIMEOUT,
-                   json={"text": text, "language_code": lang, "model": TTS_MODEL,
-                         "output_audio_codec": "opus", "speech_sample_rate": 16000})  # opus needs 8/16/24/48 kHz
-    return base64.b64decode(_check(r)["audios"][0])
+    out = _post("text-to-speech", json={"text": text, "language_code": lang, "model": TTS_MODEL,
+                                        "output_audio_codec": "opus", "speech_sample_rate": 16000})  # opus: 8/16/24/48 kHz
+    return base64.b64decode(out["audios"][0])
 
 
 def transcribe(audio: bytes, mime: str = "audio/ogg") -> tuple[str, str | None]:
     """A voice reply in any Indian language -> (transcript, detected language code)."""
-    r = httpx.post(f"{API}/speech-to-text", headers={"api-subscription-key": _key()}, timeout=TIMEOUT,
-                   files={"file": ("reply.ogg", audio, mime.split(";")[0])},
-                   data={"model": STT_MODEL, "mode": "transcribe", "language_code": "unknown"})
-    out = _check(r)
+    out = _post("speech-to-text", files={"file": ("reply.ogg", audio, mime.split(";")[0])},
+                data={"model": STT_MODEL, "mode": "transcribe", "language_code": "unknown"})
     return out["transcript"], out.get("language_code")

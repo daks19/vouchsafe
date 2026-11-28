@@ -45,14 +45,23 @@ REPLIES = {
     "pa-IN": "ਨਹੀਂ ਜੀ, ਇਹ ਆਰਡਰ ਅਸੀਂ ਦਿੱਤਾ ਹੀ ਨਹੀਂ ਸੀ।",
 }
 SCRIPTED = {r: "never_ordered" for r in REPLIES.values()}  # offline stand-in for Claude reading the reply
+DEMO_CHOICE = ("pending", "collect_proof", "closed")  # the CA's pick in a scripted run; never Reject
+DEMO_REASON = "Demo: closed by the CA."
 
 
 def offline_translate(text: str, lang: str) -> str:
     raise LLMError("offline run; --live sends it translated")
 
 
+def day_passes(agent: Agent, portal: httpx.Client, case_id: str) -> dict:
+    """W2 waits for the supplier: one day passes. The chased supplier files GSTR-1A on the first day."""
+    if case_id in ("W2:B029", "W2:B030") and agent.view(case_id)["waiting"]["checks_done"] == 0:
+        portal.post("/mock-gstn/events/supplier-files-gstr1a", json={"ctin": FILES_GSTR1A})
+    return agent.answer(case_id, {"type": "day_passed"})
+
+
 def drive(agent: Agent, portal: httpx.Client, case_id: str, shop_lang: str) -> dict:
-    """Answer every pause until the case ends: approve each draft, send the reply, let days pass."""
+    """Answer every pause until the case ends: approve each draft, send the reply, let days pass, decide as the CA."""
     v = agent.view(case_id)
     while v["waiting"]:
         w = v["waiting"]
@@ -60,15 +69,16 @@ def drive(agent: Agent, portal: httpx.Client, case_id: str, shop_lang: str) -> d
             v = agent.approve(case_id)
         elif w["type"] == "reply":
             v = agent.answer(case_id, REPLIES[shop_lang])
-        else:  # waiting for the supplier: one day passes; the chased supplier files on the first day
-            if case_id in ("W2:B029", "W2:B030") and w["checks_done"] == 0:
-                portal.post("/mock-gstn/events/supplier-files-gstr1a", json={"ctin": FILES_GSTR1A})
-            v = agent.answer(case_id, {"type": "day_passed"})
+        elif w["type"] == "ca_decision":
+            choice = next(c for c in DEMO_CHOICE if c in w["options"])
+            v = agent.decide(case_id, choice, reason=DEMO_REASON if choice == "closed" else "")
+        else:
+            v = day_passes(agent, portal, case_id)
     return v
 
 
-def run(agent: Agent, portal: httpx.Client, shop_lang: str | None = None) -> dict[str, dict]:
-    """The whole scenario, from a fresh portal. Returns each case's final view."""
+def cases_for(portal: httpx.Client, shop_lang: str | None = None) -> list[dict]:
+    """The scenario's cases from a fresh portal (5 from reconciliation + the W3 cancellation), sorted by id."""
     shop_lang = shop_lang or data.load_profile().preferred_language
     portal.post("/mock-gstn/reset")
     books = data.load_books()
@@ -77,8 +87,14 @@ def run(agent: Agent, portal: httpx.Client, shop_lang: str | None = None) -> dic
                                 shop_lang)
     portal.post("/mock-gstn/events/supplier-cancelled", json={"ctin": CANCELLED[0], "effective_from": CANCELLED[1]})
     todo.append(cases.cancellation(CANCELLED[0], PERIOD))
+    return sorted(todo, key=lambda c: c["case_id"])
+
+
+def run(agent: Agent, portal: httpx.Client, shop_lang: str | None = None) -> dict[str, dict]:
+    """The whole scenario, from a fresh portal. Returns each case's final view."""
+    shop_lang = shop_lang or data.load_profile().preferred_language
     out = {}
-    for c in sorted(todo, key=lambda c: c["case_id"]):
+    for c in cases_for(portal, shop_lang):
         agent.open(c)
         out[c["case_id"]] = drive(agent, portal, c["case_id"], shop_lang)
     return out

@@ -228,3 +228,12 @@ def test_live_deliver_on_telegram_sends_text_then_voice(env):
     env.setattr(voice, "speak", lambda t, lang: b"OGG")
     assert live.deliver({"text": "Aaya?", "lang": "hi-IN", "voice": True}) == "Telegram text and voice note to the demo chat"
     assert calls == ["text", ("voice", b"OGG")]
+
+
+@pytest.mark.parametrize("call", [lambda: voice.transcribe(b"OggS"), lambda: voice.speak("vanakkam", "ta-IN")])
+def test_sarvam_network_failure_is_a_voice_error(env, monkeypatch, call):
+    def down(*a, **kw):
+        raise httpx.ConnectTimeout("timed out")
+    monkeypatch.setattr(httpx, "post", down)
+    with pytest.raises(voice.VoiceError, match="Sarvam"):
+        call()
