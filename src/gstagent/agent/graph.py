@@ -336,7 +336,8 @@ def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date
         name = bills[0].supplier_name if bills else f["ctin"]
         lines = [f"{name} ({f['ctin']}): registration cancelled with effect from {_dd(eff.isoformat())}, a past date. "
                  f"{len(bills)} bills dated on or after that are exposed; GST on them {rupees(total)}."]
-        docs = RULES.get("itc.evidence_pack", today).params["documents"]
+        card = RULES.get("itc.evidence_pack", today).params
+        docs = {**card["documents"], **card.get("other_proof", {})}
         seen = []  # what the portal showed and when; a snapshot taken now says nothing about the purchase date
         for b, sn, p in zip(bills, snaps, packs):
             prd, obs = f"{sn['gstr2b_period'][:2]}-{sn['gstr2b_period'][2:]}", _dd(sn["taken_at"][:10])
@@ -350,8 +351,7 @@ def build(portal: httpx.Client, classify: Callable[[str, str], str], today: date
         lines += list(dict.fromkeys(p.explanation for p in packs))  # same explanation for many bills: say it once
         extra = (st["effective_from"], str(len(bills)), rupees(total), *(rupees(b.tax) for b in bills),
                  *(b.invoice_no for b in bills), *(b.invoice_date.isoformat() for b in bills),
-                 *(sn["sha256"][:12] for sn in snaps), *(p.explanation for p in packs),
-                 *(f"{p.value['present_count']} {p.value['total']}" for p in packs), *seen)
+                 *(sn["sha256"][:12] for sn in snaps), *(p.explanation for p in packs), *seen)
         return {"snapshots": snaps, "missing": missing, "facts": {**f, "supplier": name},
                 "draft": _draft(s, "ca_handoff", "CA", "\n".join(lines), then="handoff", extra=extra),
                 "timeline": [_event("portal.checked", f"cancelled from {st['effective_from']}; {len(bills)} bills exposed")]}

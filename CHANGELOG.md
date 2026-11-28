@@ -5,6 +5,12 @@ All notable changes to this project. Newest first. Dates are when the work lande
 ## [Unreleased]
 
 ### Added
+- `itc.evidence_pack` v2 (from 19 Nov 2026): the document list follows *Shaurya Alloys* para 103(vi) as quoted in
+  commentary (invoices, e-way bills, transport receipts, weighbridge slips, stock and consumption records). Toll
+  receipts (para 103(iv), the department's material) and bank payment proof (s.16(2) 180-day payment rule) move to
+  "also worth having". The pack no longer says "1 of 7 documents": the judgment's list is examples, so it lists what
+  is in the pack and what is not found, and the CA judges whether it is enough. v1 still answers for dates up to 18 Nov.
+  Still `verify_before_finale`: check against the certified judgment copy. 3 card examples.
 - CA dashboard: `python -m gstagent.dashboard` (FastAPI) serves a React page (`frontend/`) over the live agent.
   Client list, readiness meter (resolved cases only; declined and handed-over cases are not ready), exception
   queue, case detail with the draft in the recipient's language beside the English, owner approval, the CA's

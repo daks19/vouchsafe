@@ -271,20 +271,32 @@ def itc_gstr1a_flow(card: RuleCard, i: dict) -> tuple[dict, str]:
 def itc_evidence_pack(card: RuleCard, i: dict) -> tuple[dict, str]:
     p = card.params
     docs: dict[str, str] = p["documents"]
+    other: dict[str, str] = p.get("other_proof", {})  # v2+: proof outside the judgment's list
     present = set(i.get("present", []))
-    unknown = present - docs.keys()
+    unknown = present - docs.keys() - other.keys()
     if unknown:
         raise ValueError(f"unknown document keys {sorted(unknown)}")
     missing = [k for k in docs if k not in present]
     binding = str(i.get("state_code", "")).zfill(2) in p["binding_state_codes"]
-    msg = f"{len(docs) - len(missing)} of {len(docs)} documents in the pack."
+    where = (" Shaurya Alloys binds in Punjab, Haryana and Chandigarh." if binding else
+             " Shaurya Alloys is a Punjab and Haryana High Court ruling: persuasive here, not binding.")
+    tail = " The pack helps the CA show the purchase was genuine; it does not guarantee the credit."
+    if not other:  # v1 wording, kept so old packs read the same
+        msg = f"{len(docs) - len(missing)} of {len(docs)} documents in the pack."
+        if missing:
+            msg += " Missing: " + "; ".join(docs[k] for k in missing) + "."
+        return ({"present_count": len(docs) - len(missing), "total": len(docs), "missing": missing,
+                 "complete": not missing, "binding": binding, "guarantees_outcome": False}, msg + where + tail)
+    names = {**docs, **other}
+    other_missing = [k for k in other if k not in present]
+    msg = "In the pack: " + ("; ".join(names[k] for k in names if k in present) or "nothing yet") + "."
     if missing:
-        msg += " Missing: " + "; ".join(docs[k] for k in missing) + "."
-    msg += (" Shaurya Alloys binds in Punjab, Haryana and Chandigarh." if binding else
-            " Shaurya Alloys is a Punjab and Haryana High Court ruling: persuasive here, not binding.")
-    msg += " The pack helps the CA show the purchase was genuine; it does not guarantee the credit."
-    return ({"present_count": len(docs) - len(missing), "total": len(docs), "missing": missing,
-             "complete": not missing, "binding": binding, "guarantees_outcome": False}, msg)
+        msg += (" The judgment (para 103(vi)) also names, not found yet: " + "; ".join(docs[k] for k in missing)
+                + ". Its list is examples (\"such as\"), not a checklist: the CA judges whether the proof is enough.")
+    if other_missing:
+        msg += " Also worth having: " + "; ".join(other[k] for k in other_missing) + "."
+    return ({"not_found": missing, "other_missing": other_missing, "missing": missing + other_missing,
+             "complete": not missing, "binding": binding, "guarantees_outcome": False}, msg + where + tail)
 
 
 def _fy_end_year(d: date) -> int:

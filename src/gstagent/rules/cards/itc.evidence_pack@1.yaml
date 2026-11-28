@@ -2,6 +2,7 @@ id: itc.evidence_pack
 version: 1
 title: Evidence pack for a purchase from a supplier whose registration was cancelled with backdated effect
 effective_from: 2026-10-01
+effective_to: 2026-11-18
 selects_on: the date the pack is built
 params:
   documents:
